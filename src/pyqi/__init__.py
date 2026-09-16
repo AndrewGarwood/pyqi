@@ -1,10 +1,12 @@
 """
-*`@module`* `pypourri/__init__.py`
+*`@package`* `pyqi/__init__.py`
 """
 
-from . import io
+from . import (io, fs)
 from . import (
+    _function as Function,
     _array as Array, 
     _string as String, 
-    _dt as dt
+    _dt as dt,
+    _json as Json,
 )

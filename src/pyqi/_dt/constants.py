@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 from typing import (TypeAlias)
+import calendar
 import datetime as dt
 from ..models._enum import BaseIntEnum
 
@@ -22,3 +23,10 @@ class Weekday(BaseIntEnum):
     FRIDAY = 4
     SATURDAY = 5
     SUNDAY = 6
+
+
+MONTH_NAMES = list(calendar.month_name[1:])
+
+
+EXCEL_EPOCH = dt.datetime(1899, 12, 30)
+""" Excel's default Windows date system is: `1899-12-30` """

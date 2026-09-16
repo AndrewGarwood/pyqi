@@ -18,11 +18,9 @@ from .. import _array as Array
 
 
 
-def _default_get_date_str(s: str, /) -> str:
-    return s[:10]
+def _default_get_date_str(s: str, /) -> str: return s[:10]
 
-def strftime(d: dt.date, fmt: str, /) -> str:
-    return d.strftime(fmt)
+def strftime(d: dt.date, fmt: str, /) -> str: return d.strftime(fmt)
 
 def strptime(s: str, fmt: Optional[str]=None, /) -> dt.date:
     return dt.datetime.strptime(s, fmt).date() if fmt else parse(s)
@@ -273,3 +271,193 @@ def next_business_day(
     holidays: Optional[Collection[DateValue]] = None,
 ) -> dt.date:
     return offset_business_day(ref, days=1, holidays=holidays)
+
+
+def last_day_of_month(year: int, month: int) -> dt.date:
+    if month == 12:
+        next_month = dt.date(year + 1, 1, 1)
+    else:
+        next_month = dt.date(year, month + 1, 1)
+    return next_month - dt.timedelta(days=1)
+
+
+class ComputeDateDict(TypedDict, total=False):
+    anchor: NotRequired[str]
+    year_offset: NotRequired[int]
+    month_offset: NotRequired[int]
+    day_offset: NotRequired[int]
+    year: NotRequired[int]
+    month: NotRequired[int | str]
+    day: NotRequired[int | Literal["first", "last"]]
+
+
+@dataclass
+class ComputeDateOptions():
+    anchor: dt.date | None = None
+    year_offset: int = 0
+    month_offset: int = 0
+    day_offset: int = 0
+    year: Optional[int]=None
+    month: int | str | None = None
+    day: int | Literal["first", "last"] | None = None
+
+    @classmethod
+    def from_dict(cls, data: ComputeDateDict, /) -> ComputeDateOptions:
+        try:
+            return cls(
+                anchor=parse(data["anchor"]) if "anchor" in data else None,
+                year_offset=data.get("year_offset", 0),
+                month_offset=data.get("month_offset", 0),
+                day_offset=data.get("day_offset", 0),
+                year=data.get("year"),
+                month=data.get("month"),
+                day=data.get("day"),
+            )
+        except Exception as e:
+            raise Exception(LogMsg.err(e,
+                received=str(data)
+            )) from e
+
+
+def compute_date(
+    *,
+    anchor: Optional[DateValue] = None,
+    year_offset: int = 0,
+    month_offset: int = 0,
+    day_offset: int = 0,
+    year: Optional[int]=None,
+    month: int | str | None = None,
+    day: int | Literal["first", "last"] | None = None,
+    options: Optional[ComputeDateOptions]=None
+) -> dt.date:
+    """
+    Generic date computation.
+
+    - anchor: base reference date (default today)
+    - year_offset: shift years
+    - month_offset: shift months
+    - day_offset: shift days
+    - month: override month (optional)
+    - day:
+        - int -> fixed day
+        - "first" -> first day of period
+        - "last" -> last day of period
+
+    Examples:
+        compute_date(day_offset=-1)           # yesterday
+        compute_date(month_offset=-1)         # same day last month
+        compute_date(year_offset=-1)          # same day last year
+        compute_date(month="January", day=1)  # Jan 1 current year
+    """
+    if (options):
+        anchor = options.anchor
+        year_offset = options.year_offset
+        month_offset = options.month_offset
+        day_offset = options.day_offset
+        year = options.year
+        month = options.month
+        day = options.day
+
+    base = strict_resolve_date(anchor) if anchor else today()
+    
+    result = (
+        base
+        + relativedelta(years=year_offset, months=month_offset)
+        + dt.timedelta(days=day_offset)
+    )
+    year = result.year if year is None else year
+    month = (
+        list(calendar.month_name).index(month.capitalize()) if isinstance(month, str)
+        else (month or result.month)
+    )
+
+    if isinstance(day, int):
+        return dt.date(year, month, day)
+    if isinstance(day, str):
+        if day.lower() == "first":
+            return dt.date(year, month, 1)
+        elif day.lower() == "last":
+            return last_day_of_month(year, month)
+    return dt.date(year, month, result.day) # default: return same day
+
+
+
+def previous_weekday(
+    ref: Optional[DateValue],
+    weekday: Weekday,
+    allow_same_day: bool = True,
+    ) -> dt.date:
+    
+    """
+    ex: get most recent Friday when `dt = datetime(2026, 5, 14)` (a Thursday)
+    dt is thusrday -> previous Friday is May 8th, 2026
+
+    Note: term "weekday" includes saturday and sunday so it's more like "day of the week"
+    """
+    if not (Weekday.MONDAY <= weekday <= Weekday.SUNDAY):
+        raise ValueError(f"weekday must be in range 0..6 (Mon=0..Sun=6); got {weekday}")
+    ref = To.datetime(strict_resolve_date(ref) if ref else today())
+
+    
+    current_weekday = ref.weekday()
+    delta = (current_weekday - weekday) % 7 # (modulus in python) print(-1 % 7) # 6
+    if delta == 0 and not allow_same_day:
+        delta = 7
+    return (ref - dt.timedelta(days=delta)).date()
+
+
+
+
+def next_weekday(
+    ref: Optional[DateValue],
+    weekday: Weekday,
+    allow_same_day: bool = True,
+) -> dt.date:
+    """
+    Return the next soonest occurrence of `day` ~~at 12:00am (00:00).~~
+
+    Parameters
+    ----------
+    dt:
+        Input datetime (naive or timezone-aware). tzinfo is preserved.
+    weekday:
+        Desired weekday as an int where Monday=0 ... Sunday=6 (dt.weekday()).
+    allow_same_day:
+        If True and dt falls on `weekday`, return that same date at 00:00.
+        If False, then if dt is on `weekday` but after 00:00, roll forward
+        to the following week's `weekday` at 00:00.
+
+    Returns
+    -------
+    datetime
+        A datetime representing the next soonest `weekday` at midnight.
+
+    Notes
+    -----
+    - If dt is exactly at midnight of the target weekday, the function returns
+    dt itself (regardless of allow_same_day).
+    """
+    if not (Weekday.MONDAY <= weekday <= Weekday.SUNDAY):
+        raise ValueError(f"weekday must be in range 0..6 (Mon=0..Sun=6); got {weekday}")
+    ref = To.datetime(strict_resolve_date(ref) if ref else today())
+
+
+    # If caller allows "same weekday", return midnight of dt's date when it matches.
+    if allow_same_day and ref.weekday() == weekday:
+        return ref.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Compute days ahead to reach the target weekday (0..6)
+    days_ahead = (weekday - ref.weekday()) % 7
+
+    # Candidate: target weekday at midnight
+    candidate = (ref + dt.timedelta(days=days_ahead)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+
+    # If candidate is earlier than dt (e.g., dt is target weekday later in the day),
+    # then roll forward one week.
+    if candidate < ref:
+        candidate += dt.timedelta(days=7)
+
+    return candidate.date()
+

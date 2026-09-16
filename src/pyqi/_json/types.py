@@ -1,12 +1,8 @@
 """
-*`@file`* `<module>/models/_json/types.py`
+*`@file`* `_json/types.py`
 """
 from __future__ import annotations
-import json
-from pathlib import Path
-from abc import ABC, abstractmethod
-from enum import Enum
-from typing import (TypeVar, Protocol, TypeAlias, Any, Self, Generic, Mapping)
+from typing import TypeAlias
 
 JsonScalar: TypeAlias = str | int | float | bool | None
 JsonValue: TypeAlias = (

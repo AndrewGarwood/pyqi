@@ -154,9 +154,16 @@ class BaseStrEnum(StrEnum):
         return cls.names()
 
     @classmethod
-    def values(cls) -> tuple[str, ...]:
-        """ *`@returns`* `tuple(m.value for m in cls)` """
-        return tuple(m.value for m in cls)
+    def values(cls, unique: bool=True) -> tuple[str, ...]:
+        """ 
+        *`@returns`* 
+        `tuple(m.value for m in cls) if not unique 
+        else tuple(set(m.value for m in cls))` 
+        """
+        return (
+            tuple(m.value for m in cls) if not unique
+            else tuple(set(m.value for m in cls))
+        )
 
     @classmethod
     def get(cls, key: str) -> Self:
