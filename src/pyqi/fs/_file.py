@@ -35,6 +35,34 @@ def wait_for_file_unlock(
         path=str(path)
     )) from last_error
 
+def wait_for_file_exists(
+    path: StrPath,
+    /,
+    timeout: float = 60.0,
+    poll: float = 0.25,
+    stable_checks: int = 3,
+) -> Path:
+    """
+    i.e. `is_stable_after_wait`
+    Wait until file exists and size stabilizes for a few polls.
+    """
+    p = Path(path)
+    deadline = time.time() + timeout
+    stable = 0
+    last_size = -1
+    while time.time() < deadline:
+        if p.exists():
+            size = p.stat().st_size
+            if size > 0 and size == last_size:
+                stable += 1
+                if stable >= stable_checks:
+                    return p
+            else:
+                stable = 0
+                last_size = size
+        time.sleep(poll)
+    raise TimeoutError(f"Timed out waiting for file: {p}")
+
 
 def make_temp_file(src: StrPath, dst: StrPath, stem_suffix: str=".tmp") -> Path:
     tmppath: Path | None

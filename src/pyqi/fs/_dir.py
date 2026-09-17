@@ -1,7 +1,7 @@
 """
 *`@file`* `fs/_dir.py`
 """
-import time, psutil, shutil, subprocess, tempfile
+import time, shutil
 from lute import get_logger
 from ._path import *
 

@@ -11,8 +11,15 @@ from ._process import *
 from ._rename import *
 from ._search import *
 
-
-
+from . import (
+    _dir as directory,
+    _file as file,
+    _path as path,
+    _stat as stat,
+    _process as process,
+    _rename as rename_tool,
+    _search as search,
+)
 # def count_lines(filepath: Path) -> int:
 #     """ includes header row """
 #     with filepath.open("r", encoding="utf-8", errors="ignore") as f:

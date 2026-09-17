@@ -5,7 +5,7 @@
 from __future__ import annotations
 from itertools import chain
 from collections.abc import (Iterable, Iterator)
-from typing import (Any, Callable,  Optional, TypeAlias, TypeVar, overload, TypeGuard)
+from typing import (Any, Callable,  Optional, Sequence, TypeAlias, TypeVar, overload, TypeGuard)
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -133,3 +133,11 @@ def reduce(
     for i, item in enumerate(it, start=start):
         acc = fn(acc, item, i)
     return acc
+
+
+
+def isArray(arr: Any) -> TypeGuard[list[Any] | tuple[Any,...]]:
+    return isinstance(arr, (list, tuple))
+
+def isNonAtomicSequence(arr: Any) -> TypeGuard[Sequence[Any]]:
+    return (not _is_atomic(arr) and (isinstance(arr, Sequence)))
