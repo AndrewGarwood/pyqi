@@ -3,7 +3,7 @@
 """
 from __future__ import annotations
 from enum import (Enum, StrEnum, IntEnum)
-from typing import (Generic, TypeVar, Self)
+from typing import (Any, Generic, TypeVar, Self)
 
 
 
@@ -15,7 +15,7 @@ ValueT = TypeVar("ValueT", bound=(str | int))
 MetaT = TypeVar("MetaT") # , bound=object
 # """ `constraints: object` """
 
-class MetaEnum(Enum, Generic[ValueT, MetaT]):
+class MetaEnum(Generic[ValueT, MetaT], Enum):
     """
     Base class for enums declared as:
     ```
@@ -68,6 +68,10 @@ class MetaEnum(Enum, Generic[ValueT, MetaT]):
         *`@returns`* `tuple(m.name for m in cls)` 
         """
         return cls.names()
+
+    @classmethod
+    def contains(cls, key: str) -> bool:
+        return key in cls.__members__
 
     @classmethod
     def values(cls):

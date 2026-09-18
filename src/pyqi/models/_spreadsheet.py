@@ -1,8 +1,8 @@
 """
-*`@file`* `io/_spreadsheet`
+*`@file`* `io/models/_spreadsheet`
 """
 
-from ..models import (MetaEnum)
+from ._enum import (MetaEnum)
 from dataclasses import dataclass
 from typing import (Optional)
 

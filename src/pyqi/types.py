@@ -18,15 +18,24 @@ def is_atomic(value: Any, /) -> TypeGuard[Atomic]:
 Arbitrary: TypeAlias = T | Iterable[T]
 Resolved: TypeAlias = tuple[T, ...]
 
-def resolve_arbitrary(value: Arbitrary[T], /, atomic_singleton: bool=True) -> tuple[T, ...]:
+def resolve_arbitrary(
+    value: Arbitrary[T], 
+    /, 
+    atomic_to_singleton: bool=True, 
+    none_to_empty: bool=True
+) -> tuple[T, ...]:
     """ 
     - assumes 1D Iterable `if value is not T`
     - *`@param`* `value (T | Iterable[T, ...])`
-    - *`@param`* `atomic_is_singleton (bool, default=True)` - whether to return `tuple[T] (length 1)`
-        or to pass value into tuple constructor when value is `Atomic`
+    - *`@param`* `atomic_to_singleton (bool, default=True)` 
+        - whether to return `tuple[T] (length 1)`
+        or to pass `value` into `tuple` constructor when `value` is `Atomic`
         - `Atomic: TypeAlias = str | bytes | bytearray`
+    - *`@param`* `none_to_empty (bool, default=True)` - if `true` and `value is None` return empty tuple
     - *`@returns`* `tuple[T,...]` i.e. `Resolved[T]`
     """
-    if (atomic_singleton and is_atomic(value)):
+    if (none_to_empty and value is None): 
+        return tuple()
+    if (atomic_to_singleton and is_atomic(value)):
         return (value,) # type: ignore
     return (value,) if not isinstance(value, (Iterable)) else tuple(value)
