@@ -2,12 +2,11 @@
 *`@file`* `_json/serial.py`
 """
 from __future__ import annotations
-import tempfile
 import json
 from datetime import date, datetime, time
 from pathlib import Path
 from abc import ABC, abstractmethod
-from typing import (Any, Callable, Sequence, TypeVar, Self, Generic, Mapping, TypeGuard, Iterable)
+from typing import (Any, TypeVar, Self, Generic, Mapping, TypeGuard, Iterable)
 from lute import LogMsg
 from .types import (JsonDict, JsonValue, is_json_value)
 from ..types import is_primitive
@@ -55,13 +54,13 @@ class Serial(ABC, Generic[T]):
     """
     def keys(self):
         """ 
-        *`@returns`* `tuple(Array.filter(dir(self), lambda k: not is_dunder_prop(k)))`
+        *`@returns`* `Array.filter(dir(self), lambda k: not is_dunder_prop(k))`
         """
         return tuple(Array.filter(dir(self), lambda k: not is_dunder_prop(k)))
 
     def items(self) -> tuple[tuple[str, Any | None], ...]:
         """ 
-        *`@returns`* `tuple(Array.map(self.keys(), lambda k: (k, getattr(self, k, None))))`
+        *`@returns`* `Array.map(self.keys(), lambda k: (k, getattr(self, k, None)))`
         """
         return tuple(Array.map(self.keys(), lambda k: (k, getattr(self, k, None))))
 
@@ -101,16 +100,15 @@ class Serial(ABC, Generic[T]):
                     data = json.load(file)
             else:
                 data = json.loads(src)
-        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-            raise DataModelError(
+        except (OSError, UnicodeError, json.JSONDecodeError) as e:
+            raise DataModelError(LogMsg.err(e,
                 f"Could not load {cls.__name__} JSON from {type(src)=}"
-            ) from exc
+            )) from e
         if not isinstance(data, dict):
-            raise DataModelError(
+            raise DataModelError(LogMsg(
                 f"{cls.__name__} requires a JSON object; "
                 f"received {type(data).__name__}"
-            )
-
+            ))
         return cls.from_dict(data)
 
     @classmethod
@@ -134,10 +132,10 @@ class Serial(ABC, Generic[T]):
                 sort_keys=sort_keys,
                 ensure_ascii=False,
             )
-        except (TypeError, ValueError) as exc:
-            raise DataModelError(
+        except (TypeError, ValueError) as e:
+            raise DataModelError(LogMsg.err(e,
                 f"Could not serialize {type(self).__name__}"
-            ) from exc
+            )) from e
 
     def to_json_file(
         self,
@@ -163,14 +161,18 @@ class Serial(ABC, Generic[T]):
                     ensure_ascii=False,
                 )
                 file.write("\n")
-        except (OSError, TypeError, ValueError) as exc:
-            raise DataModelError(
+        except (OSError, TypeError, ValueError) as e:
+            raise DataModelError(LogMsg.err(e,
                 f"Could not write {type(self).__name__} "
-                f"to {resolved_path}"
-            ) from exc
+                f"to {resolved_path}",
+            )) from e
 
 SerializableDataClass = Serial
 
 
 def is_dunder_prop(value: str, /):
-    return len(value) > 4 and value.startswith("__") and value.endswith("__")
+    return (
+        len(value) > 4 
+        and value.startswith("__") 
+        and value.endswith("__")
+    )
