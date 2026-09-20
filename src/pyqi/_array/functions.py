@@ -5,7 +5,9 @@
 from __future__ import annotations
 from itertools import chain
 from collections.abc import (Iterable, Iterator)
-from typing import (Any, Callable,  Optional, Sequence, TypeAlias, TypeVar, overload, TypeGuard)
+from typing import (Any, Callable, Literal,  Optional, Sequence, TypeAlias, TypeVar, overload, TypeGuard)
+from lute import LogMsg
+import lute
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -53,10 +55,10 @@ def _can_flatten(value: object, /) -> bool:
 def filter(arr: Iterable[T | None], fn: None, /) -> list[T]: ...
 
 @overload
-def filter(arr: Iterable[T], fn: Callable[[T], TypeGuard[U]],/) -> list[U]: ...
+def filter(arr: Iterable[T], fn: Callable[[T], TypeGuard[U]], /) -> list[U]: ...
 
 @overload
-def filter(arr: Iterable[T], fn: Callable[[T], bool],/) -> list[T]: ...
+def filter(arr: Iterable[T], fn: Callable[[T], bool], /) -> list[T]: ...
 
 def filter(arr: Iterable[T], fn: Callable[[T], Any] | None, /) -> list[Any]:
     """ *`@returns`* `[x for x in arr if fn(x)]` """
@@ -83,9 +85,36 @@ def forEach(arr: Iterable[T], fn: Callable[[T], U], /) -> None:
     for x in arr: fn(x)
     return None
 
-def find(arr: Iterable[T], fn: Callable[[T], bool], /) -> Optional[T]:
-    found = filter(arr, fn)
-    return None if not found else found[0]
+@overload
+def find(arr: Iterable[T], fn: Callable[[T], bool], /) -> Optional[T]: ...
+
+@overload
+def find(arr: Iterable[T], fn: Callable[[T], bool], /, *, unique: Literal[True]=True) -> Optional[T]: ...
+
+@overload
+def find(arr: Iterable[T], fn: Callable[[T], bool], /, *, strict: Literal[True]=True) -> T: ...
+
+@overload
+def find(arr: Iterable[T], fn: Callable[[T], bool], /, *, unique: bool, strict: Literal[False]=False) -> Optional[T]: ...
+
+@overload
+def find(arr: Iterable[T], fn: Callable[[T], bool], /, *, unique: bool, strict: Literal[True]=True) -> T: ...
+
+def find(arr: Iterable[T], fn: Callable[[T], bool], /, *, unique: bool=False, strict: bool=False):
+    matched = filter(arr, fn)
+    if (strict and not matched):
+        raise RuntimeError(LogMsg(
+            "No values satisfying filter function.",
+            iterable_received=lute.annotate(arr),
+            fn_received=lute.annotate(fn)
+        ))
+    if (unique and len(matched) > 1):
+        raise RuntimeError(LogMsg(
+            "Found multiple values satisfying filter function.",
+            iterable_received=lute.annotate(arr),
+            fn_received=lute.annotate(fn)
+        ))
+    return None if not matched else matched[0]
 
 def every(arr: Iterable[T], fn: Callable[[T], bool]=lambda x: bool(x), /) -> bool:
     """ *`@returns`* `all(map(arr, fn))` """
@@ -113,11 +142,21 @@ def reduce(
     /,
 ) -> U: ...
 
+@overload
+def reduce(
+    arr: Iterable[T],
+    fn: Callable[[U, T, int], U],
+    acc: U,
+    /,
+    start_offset:int=0,
+) -> U: ...
+
 def reduce(
     arr: Iterable[T],
     fn: Callable[..., Any],
     acc=_MISSING,
     /,
+    start_offset:int=0,
 ):
     it: Iterator[T] = iter(arr)
     start = 0
@@ -130,7 +169,7 @@ def reduce(
             ) from None
         start = 1
 
-    for i, item in enumerate(it, start=start):
+    for i, item in enumerate(it, start=start+start_offset):
         acc = fn(acc, item, i)
     return acc
 
