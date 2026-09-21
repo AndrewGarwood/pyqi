@@ -178,6 +178,10 @@ class BaseStrEnum(StrEnum):
         return cls[key]
 
     @classmethod
+    def from_value(cls, value: str) -> Self:
+        return cls(value)
+
+    @classmethod
     def contains(cls, key: str) -> bool:
         """ *`@returns`* `key in cls.__members__` """
         return key in cls.__members__

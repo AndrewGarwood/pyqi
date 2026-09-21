@@ -2,8 +2,9 @@
 *`@file`* `io/_csv`
 """
 
+from pathlib import Path
+
 from ._enum import BaseStrEnum
-from ..fs._path import StrPath, to_path
 
 class Delimiter(BaseStrEnum):
     """
@@ -25,7 +26,7 @@ class Delimiter(BaseStrEnum):
     COLON = ":"
 
 def get_header_length(
-    path: StrPath, 
+    path: str | Path, 
     /, 
     encoding: str = "utf-8", 
     delimiter: str | Delimiter = "\t"
@@ -33,7 +34,7 @@ def get_header_length(
     """ 
     *`@returns`* `num_cols: int` = `0 if not header else len(header.split(delimiter))`
     """
-    with to_path(path).open("r", encoding=encoding) as f:
+    with Path(path).open("r", encoding=encoding) as f:
         header = f.readline().rstrip("\r\n")
         if not header:
             return 0

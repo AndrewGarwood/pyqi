@@ -28,8 +28,8 @@ def strptime(s: str, fmt: Optional[str]=None, /) -> dt.date:
 def today() -> dt.date:
     return dt.date.today()
 
-
-def resolve_date(d: DateValue, /) -> Optional[dt.date]:
+# TODO make resolve and strict_resolve_date single function with overloads
+def resolve(d: DateValue, /) -> Optional[dt.date]:
     """
     *`@returns`*
     - `parse(d) if isinstance(d, str)`
@@ -43,6 +43,7 @@ def resolve_date(d: DateValue, /) -> Optional[dt.date]:
         else d if isinstance(d, dt.date)
         else None
     )
+resolve_date = resolve # temp alias
 
 def strict_resolve_date(d: DateValue, /) -> dt.date:
     """
@@ -205,7 +206,7 @@ def offset_business_day(
         raise TypeError(LogMsg(
             f"days must be an integer, got {type(days).__name__}"
         ))
-    ref_date = resolve_date(ref) if ref else today()
+    ref_date = resolve(ref) if ref else today()
     if not isinstance(ref_date, dt.date):
         raise TypeError(LogMsg(
             f"ref must be a date, datetime, valid date str, or None, "
@@ -215,7 +216,7 @@ def offset_business_day(
     if days == 0: return ref_date
     
     _holidays: list[dt.date] = (
-        Array.filter_map(list(holidays), resolve_date)
+        Array.filter_map(list(holidays), resolve)
         if holidays is not None 
         else []
     )
