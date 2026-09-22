@@ -1,12 +1,15 @@
 """
 *`@file`* `_json/serial.py`
+- TODO: should use pydantic
 """
 from __future__ import annotations
 import json
 from datetime import date, datetime, time
 from pathlib import Path
 from abc import ABC, abstractmethod
-from typing import (Any, TypeVar, Self, Generic, Mapping, TypeGuard, Iterable)
+from collections.abc import Mapping
+from typing import (Any, TypeVar, Self, Generic, TypeGuard, Iterable)
+from pydantic import BaseModel
 from lute import LogMsg
 from .types import (JsonDict, JsonValue, is_json_value)
 from ..types import is_primitive
@@ -37,9 +40,10 @@ class DataModelError(ValueError):
     """Raised when model deserialization or serialization fails."""
 
 
-class Serial(ABC, Generic[T]):
+class Serial(ABC, Generic[T], BaseModel):
     """
-    `ABC, Generic[T]` where `T = TypeVar("T", bound=(Mapping))`
+    `ABC, Generic[T], pydantic.BaseModel` 
+    - where `T = TypeVar("T", bound=(Mapping))`
     ```
     @abstractmethod def from_dict(cls, data: JsonDict[T],/)
     def to_dict(self)
@@ -71,7 +75,7 @@ class Serial(ABC, Generic[T]):
         data: JsonDict[T],
         /,
     ) -> Self:
-        """Construct an instance from mapping data."""
+        """`@abstract` Construct an instance from mapping data."""
         raise NotImplementedError
     
     def to_dict(self) -> JsonDict[T]:
