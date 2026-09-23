@@ -40,10 +40,11 @@ class DataModelError(ValueError):
     """Raised when model deserialization or serialization fails."""
 
 
-class Serial(ABC, Generic[T], BaseModel):
+class Serial(ABC, BaseModel, Generic[T]):
     """
-    `ABC, Generic[T], pydantic.BaseModel` 
+    `ABC, pydantic.BaseModel, Generic[T],` 
     - where `T = TypeVar("T", bound=(Mapping))`
+    - TODO: just use pydantic
     ```
     @abstractmethod def from_dict(cls, data: JsonDict[T],/)
     def to_dict(self)
