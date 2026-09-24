@@ -3,3 +3,4 @@
 """
 
 from ._string import *
+from .number import *

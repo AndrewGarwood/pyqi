@@ -3,7 +3,7 @@
 """
 from __future__ import annotations
 from enum import (Enum, StrEnum, IntEnum)
-from typing import (Any, Generic, TypeVar, Self)
+from typing import (Any, Generic, TypeVar, Self, TypeGuard)
 
 
 
@@ -178,11 +178,11 @@ class BaseStrEnum(StrEnum):
         return cls[key]
 
     @classmethod
-    def from_value(cls, value: str) -> Self:
+    def from_value(cls, value: str, /) -> Self:
         return cls(value)
 
     @classmethod
-    def contains(cls, key: str) -> bool:
+    def contains(cls, key: str, /) -> bool:
         """ *`@returns`* `key in cls.__members__` """
         return key in cls.__members__
 
@@ -219,11 +219,11 @@ class BaseIntEnum(IntEnum):
         return tuple(m.value for m in cls)
 
     @classmethod
-    def get(cls, key: str) -> Self:
+    def get(cls, key: str, /) -> Self:
         """ *`@returns`* `cls[key]` """
         return cls[key]
 
     @classmethod
-    def contains(cls, key: str) -> bool:
+    def contains(cls, key: str, /) -> bool:
         """ *`@returns`* `key in cls.__members__` """
         return key in cls.__members__
