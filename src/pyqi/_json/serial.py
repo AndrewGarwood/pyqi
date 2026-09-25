@@ -47,14 +47,16 @@ class Serial(ABC, BaseModel, Generic[T]):
     - TODO: just use pydantic
     ```
     @abstractmethod def from_dict(cls, data: JsonDict[T],/)
-    def to_dict(self)
+    def to_dict(self) -> JsonDict[T] # should overwrite
 
     @classmethod def from_json(cls, src: str | bytes | Path, /)
     @classmethod def from_json_file(cls, src: StrPath, /)
     
     def to_json_string(self, *, indent: int=4, sort_keys: bool=False)
     def to_json_file(self, path: StrPath, /, *, indent: int=4, sort_keys: bool=False)
-    def keys(self)
+    
+    def keys(self) -> tuple[str,...]: ...
+    def items(self) -> tuple[tuple[str, Any | None], ...]: ...
     ```
     """
     def keys(self):

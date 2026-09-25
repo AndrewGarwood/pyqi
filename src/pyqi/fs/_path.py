@@ -36,16 +36,21 @@ def normalized(path: StrPath, /):
 def to_path(
     p: StrPath | PurePath, 
     /, 
-    expanduser: bool=False, 
+    expanduser: bool | Literal['auto']=False, 
     resolve: bool=True
 ) -> Path:
     """ 
     *`@returns`* `(Path(p) if not isinstance(p, Path) else p)`
     - `if resolve: return p.resolve()`
+    - `if expanduser == 'auto'` `return p.expanduser() if p starts with '~'`
     """
     p = Path(p) if not isinstance(p, Path) else p
-    if resolve: return p.resolve()
-    return (p.expanduser() if expanduser else p)
+    should_expand = (
+        (expanduser=='auto' and str(p).startswith('~')) or expanduser
+    )
+    if (should_expand): p = p.expanduser()
+    if (resolve): p = p.resolve()
+    return p
 
 def is_file(p: StrPath, /) -> bool:
     """ *`@returns`* `str(p) != "." and p.is_file()` """
