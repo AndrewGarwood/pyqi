@@ -16,7 +16,7 @@ def export_symbols(*items: HasDunderName, ) -> tuple[str, ...]:
         "const0"
     ]
     ```
-    `.vscode/settings.json` (if no want warning)
+    `.vscode/settings.json` (if want to suppress warning)
     ```
     {
         "python.analysis.diagnosticSeverityOverrides": {
@@ -33,7 +33,7 @@ def export(*items: HasDunderName | str, ) -> list[str]:
     ```
     __all__ = export(cls0, cls1, fn0, fn1, "const0")
     ```
-    `.vscode/settings.json` (if no want warning)
+    `.vscode/settings.json` (if want to suppress warning)
     ```
     {
         "python.analysis.diagnosticSeverityOverrides": {

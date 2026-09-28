@@ -82,7 +82,7 @@ DateFormatString = FormatString
 
 def resolve_date_code(
     ref_date: date | datetime,
-    *code: str | DateFormatCode
+    *code: str | FormatCode
 ) -> dict[str, str]:
     """
     *`@returns`* `{ c: ref_date.strftime(c) for c in code }`
@@ -101,28 +101,27 @@ def resolve_date_code(
 
 FORMAT_STRINGS = set(FormatString.values()).union(set(FormatCode.values()))
 
-def resolve_optional_date_code(
-    ref_date: date | datetime,
-    s: str | DateFormatCode
-) -> str:
-    """ 
-    *`@returns`* 
-    `ref_date.strftime(s) 
-    if s in FORMAT_STRINGS or String.contains(s, DateFormatCode.values()) 
-    else str(s) 
-    `
+def can_format(s: str, /) -> bool:
     """
+    *`@returns`* `s in FORMAT_STRINGS or String.contains(s, FormatCode.values(), ignore_case=False)`
+    = whether `<date|datetime|time>.strftime(s) will change s` """
     return (
-        ref_date.strftime(s) 
-        if s in FORMAT_STRINGS or String.contains(s, DateFormatCode.values())
-        else str(s)
+        s in FORMAT_STRINGS 
+        or String.contains(s, FormatCode.values(), ignore_case=False)
     )
 
-def matches_format(s: str, fmt: str | DateFormatString) -> bool:
-    try:
-        return isinstance(
-            datetime.strptime(s, fmt), 
-            (datetime, date)
-        )
+def resolve_optional_date_code(
+    ref: date | datetime,
+    s: str | FormatCode,
+    /,
+) -> str:
+    """ 
+    *`@returns`* `ref_date.strftime(s)`
+    """
+    return ref.strftime(s)
+
+def matches_format(s: str, /, fmt: str | FormatString) -> bool: 
+    try: # , cls: type[datetime] | type[date] | type[time]=datetime
+        return isinstance(datetime.strptime(s, fmt), datetime)
     except Exception:
         return False

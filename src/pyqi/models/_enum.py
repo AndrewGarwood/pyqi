@@ -2,6 +2,7 @@
 *`@file`* `models/_enum`
 """
 from __future__ import annotations
+from functools import cached_property, cache
 from enum import (Enum, StrEnum, IntEnum)
 from typing import (Any, Generic, TypeVar, Self, TypeGuard)
 
@@ -133,37 +134,58 @@ class MetaEnum(Generic[ValueT, MetaT], Enum):
 I'd prefer BaseStrEnum and BaseIntEnum both inherit from BaseEnum<ValueT>, 
 but type hint no bueno. at least for 3.11
 """
+class cached_classproperty:
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, owner):
+        if owner is None:
+            return self
+        # Compute the value using the class (owner)
+        value = self.func(owner)
+        # Cache the calculated value directly onto the class, overwriting the descriptor
+        setattr(owner, self.func.__name__, value)
+        return value
+    
 # ============================================================================
 # StrEnum
 # ============================================================================
 class BaseStrEnum(StrEnum):
     """
     `name = <string>`
+    - applies `@functools.cache` decorator 
+    to class methods: `members, names, keys, values`
     """
     
     @classmethod
+    @cache
     def members(cls) -> tuple[Self, ...]:
-        """ *`@returns`* `tuple(cls)` """
+        """ 
+        - *`@returns`* `tuple(cls)` 
+        """
         return tuple(cls)
     
     @classmethod
+    @cache
     def names(cls) -> tuple[str, ...]:
         """ 
-        *`@returns`* `tuple(m.name for m in cls)` 
+        - *`@returns`* `tuple(m.name for m in cls)` 
         """
         return tuple(m.name for m in cls)
 
     @classmethod
-    def keys(cls): 
+    @cache
+    def keys(cls) -> tuple[str, ...]: 
         """ 
-        *`@returns`* `tuple(m.name for m in cls)` 
+        - *`@returns`* `tuple(m.name for m in cls)` 
         """
         return cls.names()
 
     @classmethod
+    @cache
     def values(cls, unique: bool=True) -> tuple[str, ...]:
         """ 
-        *`@returns`* 
+        - *`@returns`* 
         `tuple(m.value for m in cls) if not unique 
         else tuple(set(m.value for m in cls))` 
         """
@@ -173,7 +195,7 @@ class BaseStrEnum(StrEnum):
         )
 
     @classmethod
-    def get(cls, key: str) -> Self:
+    def get(cls, key: str, /) -> Self:
         """ *`@returns`* `cls[key]` """
         return cls[key]
 
@@ -192,31 +214,46 @@ class BaseStrEnum(StrEnum):
 class BaseIntEnum(IntEnum):
     """
     `name = <int>`
+    - applies `@functools.cache` decorator 
+    to class methods: `members, names, keys, values`
     """
     
     @classmethod
+    @cache
     def members(cls) -> tuple[Self, ...]:
-        """ *`@returns`* `tuple(cls)` """
+        """ 
+        - *`@returns`* `tuple(cls)` 
+        """
         return tuple(cls)
     
     @classmethod
+    @cache
     def names(cls) -> tuple[str, ...]:
         """ 
-        *`@returns`* `tuple(m.name for m in cls)` 
+        - *`@returns`* `tuple(m.name for m in cls)` 
         """
         return tuple(m.name for m in cls)
 
     @classmethod
-    def keys(cls): 
+    @cache
+    def keys(cls) -> tuple[str, ...]: 
         """ 
-        *`@returns`* `tuple(m.name for m in cls)` 
+        - *`@returns`* `tuple(m.name for m in cls)` 
         """
         return cls.names()
 
     @classmethod
-    def values(cls) -> tuple[int, ...]:
-        """ *`@returns`* `tuple(m.value for m in cls)` """
-        return tuple(m.value for m in cls)
+    @cache
+    def values(cls, unique: bool=True) -> tuple[int, ...]:
+        """ 
+        - *`@returns`* 
+        `tuple(m.value for m in cls) if not unique 
+        else tuple(set(m.value for m in cls))` 
+        """
+        return (
+            tuple(m.value for m in cls) if not unique
+            else tuple(set(m.value for m in cls))
+        )
 
     @classmethod
     def get(cls, key: str, /) -> Self:

@@ -4,17 +4,12 @@
 from enum import auto
 from pathlib import Path
 from ._path import (to_path)
-from .types import (StrPath, TargetExt)
+from .types import (StrPath, TargetExt, RenameOperation)
 from ._search import (get_directory_files)
 from lute import LogMsg
 from typing import (Optional, Callable, Sequence, Mapping)
 from .. import (_string as String, _array as Array)
 
-
-class RenameOperation(String.BaseEnum):
-    PREPEND = auto()
-    APPEND = auto()
-    REPLACE = auto()
 
 
 def rename_dir_files(

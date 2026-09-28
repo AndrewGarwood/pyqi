@@ -6,8 +6,8 @@ from datetime import date, datetime
 from pathlib import Path, PurePath
 from typing import Callable, Literal, Optional
 from lute import LogMsg
-from .types import (StrPath, TargetExt, DataExt)
-from .._dt._format import FormatString
+from .types import (RenameOperation, StrPath, TargetExt, DataExt)
+from .._dt._format import (FormatString, resolve_optional_date_code, can_format)
 from .. import _string as String
 
 
@@ -36,41 +36,61 @@ def normalized(path: StrPath, /):
 def to_path(
     p: StrPath | PurePath, 
     /, 
-    expanduser: bool | Literal['auto']=False, 
-    resolve: bool=True
+    expanduser: bool | Literal['auto']='auto', 
+    resolve: bool=False
 ) -> Path:
     """ 
     *`@returns`* `(Path(p) if not isinstance(p, Path) else p)`
-    - `if resolve: return p.resolve()`
-    - `if expanduser == 'auto'` `return p.expanduser() if p starts with '~'`
+    - `if ((expanduser or expanduser == 'auto') and p starts with '~')` 
+        `return p.expanduser()`
+    - `elif resolve: return p.resolve()`
+    - `else p`
     """
     p = Path(p) if not isinstance(p, Path) else p
     should_expand = (
-        (expanduser=='auto' and str(p).startswith('~')) or expanduser
+        (expanduser=='auto' or expanduser) and str(p).startswith('~')
     )
-    if (should_expand): p = p.expanduser()
-    if (resolve): p = p.resolve()
-    return p
+    return (
+        p.expanduser() if should_expand
+        else p.resolve() if resolve 
+        else p
+    )
 
-def is_file(p: StrPath, /) -> bool:
-    """ *`@returns`* `str(p) != "." and p.is_file()` """
+def is_file(p: StrPath, /, absolute: bool=False) -> bool:
+    """ *`@returns`* `p.is_file() and (not absolute or p.is_absolute())` """
     p = to_path(p or '')
-    return (str(p) != "." and p.is_file())
 
-def is_dir(p: StrPath, /) -> bool:
-    """ *`@returns`* `str(p) != "." and p.is_dir()` """
+    return (
+        p.is_file() 
+        and (not absolute or p.is_absolute()))
+
+def is_dir(p: StrPath, /, absolute: bool=False) -> bool:
+    """ *`@returns`* `str(p) != "." and p.is_dir() and (not absolute or p.is_absolute())` """
     p = to_path(p or '')
-    return (str(p) != "." and p.is_dir())
+    return (
+        str(p) != "." 
+        and p.is_dir() 
+        and (not absolute or p.is_absolute())
+    )
 
+def home() -> Path:
+    return Path.home()
 
 def lname(
     p: StrPath, 
     /, 
-    prefix: Optional[Literal['~', '$', '...'] | str]='~'
+    prefix: Optional[Literal['~', '$', '...'] | str]='~',
+    depth: int=2,
+    sep: str = "/"
 ):
+    """ 
+    *`@returns`* `f"{prefix}{sep}{sep.join(p.parts[depth:])}"` 
+    where `depth = -1 * max(abs(depth), 1)`
+    """
     p = to_path(p)
     prefix = '' if prefix is None else prefix
-    return f"{prefix}{p.parent.name}/{p.name}"
+    depth = -1 * max(abs(depth), 1)
+    return f"{prefix}{sep}{sep.join(p.parts[depth:])}"
 
 
 def sanitize_filename(value: str) -> str:
@@ -80,7 +100,12 @@ def sanitize_filename(value: str) -> str:
     return value
 
 
-def dated_folder(base: StrPath="", ref: date | None = None, suffix: str="", fmt: str=FormatString.YMD_DOT) -> Path:
+def dated_folder(
+    base: StrPath="", 
+    ref: date | None = None, 
+    suffix: str="", 
+    fmt: str=FormatString.YMD_DOT
+) -> Path:
     """ *`@returns`* path to `'{base}/{datestamp(ref)}'` 
         - `'{base}/{datestamp(ref)}_{suffix}'` `if suffix is not None `
         - `'{datestamp(ref)}_{suffix}'` `if base is None`
@@ -96,6 +121,7 @@ def dated_filename(
     ext: Optional[DataExt | str] = None,
     ref: date | datetime | None = None,
     fmt: FormatString | str=FormatString.YMD_DOT,
+    how: RenameOperation | Literal['auto']= RenameOperation.PREPEND
 ) -> str:
     """ 
     *`@returns`* `f"{datestamp(ref)}_{sanitize_filename(base)}{extension}"`
@@ -107,7 +133,6 @@ def dated_filename(
         else f".{ext}" if ext and not ext.startswith('.') 
         else ext
     )
-
     if (not ext):
         raise ValueError(LogMsg(
             f"Unable to resolve file extension (path.suffix) from arguments",
@@ -121,8 +146,28 @@ def dated_filename(
         if not sanitized.lower().endswith(ext.lower()) 
         else sanitized
     )
-    if ref is None: ref = date.today()
+    if ref is None: ref = datetime.now()
     _datestamp = ref.strftime(fmt)
+    result = f"{_datestamp}{ext}"
+    if (filename != ext):
+        match how:
+            case RenameOperation.PREPEND:
+                result = f"{_datestamp}_{filename}"
+            case RenameOperation.APPEND:
+                result = f"{filename.rsplit('.')[0]}_{_datestamp}{ext}"
+            case RenameOperation.REPLACE:
+                result = resolve_optional_date_code(ref, filename)
+            case 'auto':
+                result = (
+                    resolve_optional_date_code(ref, filename) 
+                    if can_format(filename)
+                    else f"{_datestamp}_{filename}"
+                )
+            case _:
+                raise ValueError(LogMsg.bad_arg(
+                    how, "how", "Unsupported operation", RenameOperation, "Literal['auto']"
+                ))
+    return result
     return f"{_datestamp}_{filename}" if filename != ext else f"{_datestamp}{ext}"
 
 
