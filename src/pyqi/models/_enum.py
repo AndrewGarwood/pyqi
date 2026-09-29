@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import cached_property, cache
 from enum import (Enum, StrEnum, IntEnum)
 from typing import (Any, Generic, TypeVar, Self, TypeGuard)
+from lute import LogMsg, annotate
 
 
 
@@ -205,8 +206,29 @@ class BaseStrEnum(StrEnum):
 
     @classmethod
     def contains(cls, key: str, /) -> bool:
-        """ *`@returns`* `key in cls.__members__` """
+        """ 
+        *`@returns`* `key in cls.__members__`
+        - `type(cls.__members__)` = `MappingProxyType[str, BaseStrEnum*]*`
+        """
         return key in cls.__members__
+
+    @classmethod
+    def resolve(cls, item: str | Self, /) -> Self:
+        if (isinstance(item, cls)):
+            return item
+        try: 
+            return cls.get(item)
+        except Exception as ke:
+            try: 
+                return cls(item)
+            except Exception as ve:
+                raise RuntimeError(LogMsg(
+                    f"Unable to resolve item to {cls.__name__}",
+                    expected=f"cls | str (element of cls.keys() or cls.values())",
+                    received=annotate(item),
+                    key_error=annotate(ke),
+                    value_error=annotate(ve)
+                )) from ve
 
 # ============================================================================
 # IntEnum
@@ -264,3 +286,17 @@ class BaseIntEnum(IntEnum):
     def contains(cls, key: str, /) -> bool:
         """ *`@returns`* `key in cls.__members__` """
         return key in cls.__members__
+
+    @classmethod
+    def resolve(cls, item: str | int | Self, /) -> Self:
+        if (isinstance(item, cls)): 
+            return item
+        try:
+            return cls(item) if isinstance(item, int) else cls[item]
+        except Exception as e:
+            raise RuntimeError(LogMsg(
+                f"Unable to resolve item to {cls.__name__}",
+                expected=f"cls | str (element of self.keys()) | int (element of self.values())",
+                received=annotate(item),
+                error=annotate(e)
+            )) from e

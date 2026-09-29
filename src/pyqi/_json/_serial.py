@@ -40,23 +40,23 @@ class DataModelError(ValueError):
     """Raised when model deserialization or serialization fails."""
 
 
-class Serial(ABC, BaseModel, Generic[T]):
+class Serial(ABC, Generic[T]):
     """
-    `ABC, pydantic.BaseModel, Generic[T],` 
+    `ABC, Generic[T],` 
     - where `T = TypeVar("T", bound=(Mapping))`
-    - TODO: just use pydantic
+    - TODO: just use pydantic BaseModel ?
     ```
-    @abstractmethod def from_dict(cls, data: JsonDict[T],/)
-    def to_dict(self) -> JsonDict[T] # should overwrite
+    - @abstractmethod def from_dict(cls, data: JsonDict[T],/)
+    - def to_dict(self) -> JsonDict[T] # should overwrite
 
-    @classmethod def from_json(cls, src: str | bytes | Path, /)
-    @classmethod def from_json_file(cls, src: StrPath, /)
+    - @classmethod def from_json(cls, ...)
+    - @classmethod def from_json_file(cls, ...)
     
-    def to_json_string(self, *, indent: int=4, sort_keys: bool=False)
-    def to_json_file(self, path: StrPath, /, *, indent: int=4, sort_keys: bool=False)
+    - def to_json_string(self, ...)
+    - def to_json_file(self, ...)
     
-    def keys(self) -> tuple[str,...]: ...
-    def items(self) -> tuple[tuple[str, Any | None], ...]: ...
+    - def keys(self) -> tuple[str,...]: ...
+    - def items(self) -> tuple[tuple[str, Any | None], ...]: ...
     ```
     """
     def keys(self):

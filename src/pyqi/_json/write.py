@@ -3,12 +3,12 @@
 """
 import json
 from pathlib import (Path)
-from typing import Optional
+from typing import Optional, TypeAlias
 from lute import (LogMsg, annotate)
 from .types import (JsonValue)
-from ..fs import (StrPath)
 
 
+StrPath: TypeAlias = str | Path
 def file(
     data: JsonValue, 
     path: StrPath, 

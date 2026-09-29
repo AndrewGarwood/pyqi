@@ -13,9 +13,15 @@ from . import (
 
 from ._date import (
     resolve as resolve_date,
-    today
+    today,
+    From as date_from,
+    To as date_to,
+    compute_date
 )
 from ._datetime import (
-    resolve_datetime as resolve_datetime, # for when rename to resolve in _datetime.py
-    now
+    resolve as resolve_datetime,
+    now,
+    isostamp,
+    From as datetime_from,
+    To as datetime_to
 )

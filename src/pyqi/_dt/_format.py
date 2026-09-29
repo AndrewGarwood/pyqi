@@ -7,7 +7,7 @@ from lute import LogMsg
 from typing import (Literal)
 from .. import (_array as Array, _string as String)
 
-class DateFormatCode(String.BaseEnum):
+class FormatCode(String.BaseEnum):
     MONTH_NAME = "%B"
     MONTH_ABBR = "%b" # or %h ?
     MONTH_NUM = "%m"
@@ -53,7 +53,7 @@ class DateFormatCode(String.BaseEnum):
     """ Time in 24-hour notation format `%H:%M:%S` """
     TIME_12 = "%r"
 
-FormatCode = DateFormatCode
+DateFormatCode = FormatCode
 
 class FormatString(String.BaseEnum):
     YMD_HYPHEN = "%Y-%m-%d" # Code.DATE_YMD.value
@@ -66,6 +66,8 @@ class FormatString(String.BaseEnum):
     MDY_SLASH = "%m/%d/%y" # Code.DATE_MDY.value
     MDY_DOT = "%m.%d.%y"
     MDY_TIME_MERIDIAN_SLASH = "%m/%d/%Y %I:%M:%S %p"
+
+    MY_SLASH ="%m/%Y"
 
     @staticmethod
     def ymd(

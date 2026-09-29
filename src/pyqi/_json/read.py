@@ -6,8 +6,7 @@
 import json
 from pathlib import Path
 from lute import LogMsg, annotate
-from ..fs import (StrPath)
-from typing import (TypeVar)
+from typing import (TypeVar, TypeAlias)
 from .types import (
     JsonObject, 
     JsonScalar, 
@@ -15,7 +14,7 @@ from .types import (
     JsonArray
 )
 T = TypeVar('T', bound=JsonScalar)
-
+StrPath: TypeAlias = str | Path
 def file(path: StrPath, /, **kwargs) -> JsonValue:
     try:
         with Path(path).open("r", encoding="utf-8") as f:

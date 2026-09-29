@@ -8,3 +8,4 @@ from ._spreadsheet import *
 from ._telemetry import *
 from ._flow import *
 from ._result import *
+from ._registry import *

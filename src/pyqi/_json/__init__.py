@@ -2,7 +2,7 @@
 *`@module`* `_json/__init__.py`
 """
 from .types import *
-from .serial import *
+from ._serial import *
 from . import (read, load, write)
 from .read import (
     file as read_file, 

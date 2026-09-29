@@ -2,7 +2,7 @@
 *`@package`* `pyqi/__init__.py`
 """
 
-from . import (io, fs as fs)
+from . import (io, fs)
 from . import (
     _function as Function,
     _array as Array, 

@@ -27,7 +27,7 @@ def parse(date_str: str, /, parserinfo: Optional[dateutil.parser.parserinfo]=Non
         **kwargs
     )
 
-def resolve_datetime(d: DateValue, /) -> Optional[dt.datetime]:
+def resolve(d: DateValue, /) -> Optional[dt.datetime]:
     """
     *`@returns`*
     - `dateutil.parser.parse(d) if isinstance(d, str)`
