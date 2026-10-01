@@ -3,9 +3,10 @@
 """
 from __future__ import annotations
 import datetime as dt
-from typing import (Literal,  Optional)
+from typing import (Literal,  Optional, overload)
 from zoneinfo import ZoneInfo
 import dateutil
+from lute import LogMsg
 from .constants import (DateValue, EXCEL_EPOCH)
 
 
@@ -27,7 +28,13 @@ def parse(date_str: str, /, parserinfo: Optional[dateutil.parser.parserinfo]=Non
         **kwargs
     )
 
-def resolve(d: DateValue, /) -> Optional[dt.datetime]:
+@overload
+def resolve(d: DateValue, /)  -> Optional[dt.datetime]: ...
+
+@overload
+def resolve(d: DateValue, /, strict: Literal[True]) -> dt.datetime: ...
+
+def resolve(d: DateValue, /, strict: bool=False):
     """
     *`@returns`*
     - `dateutil.parser.parse(d) if isinstance(d, str)`
@@ -35,15 +42,22 @@ def resolve(d: DateValue, /) -> Optional[dt.datetime]:
     - `Datetime.From.date(d) if isinstance(d, dt.date)`
     - `else None`
     """
-    if isinstance(d, str): 
-        return dateutil.parser.parse(d)
-    return (
-        dateutil.parser.parse(d) if isinstance(d, str)
-        else d if isinstance(d, dt.datetime)
-        else From.date(d) if isinstance(d, dt.date)
-        else None
-    )
-
+    try:
+        if isinstance(d, str): 
+            return dateutil.parser.parse(d)
+        result = (
+            d if isinstance(d, dt.datetime)
+            else From.date(d) if isinstance(d, dt.date)
+            else None
+        )
+        if (result is None and strict):
+            raise ValueError(f"Unable to resolve value '{d}' to datetime")
+        return result
+    except Exception as e:
+        if (strict): 
+            raise RuntimeError(LogMsg.err(e, d=str(d), strict=strict))
+        return None
+    
 
 
 

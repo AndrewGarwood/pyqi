@@ -8,7 +8,7 @@ from collections.abc import Collection
 import calendar
 import datetime as dt
 from dateutil.relativedelta import relativedelta
-from typing import (Literal, Callable, Optional, TypedDict, NotRequired)
+from typing import (Literal, Callable, Optional, TypedDict, NotRequired, overload)
 from dataclasses import dataclass
 from zoneinfo import ZoneInfo
 from dateutil import parser
@@ -25,11 +25,15 @@ def strftime(d: dt.date, fmt: str, /) -> str: return d.strftime(fmt)
 def strptime(s: str, fmt: Optional[str]=None, /) -> dt.date:
     return dt.datetime.strptime(s, fmt).date() if fmt else parse(s)
 
-def today() -> dt.date:
-    return dt.date.today()
+def today() -> dt.date: return dt.date.today()
 
-# TODO make resolve and strict_resolve_date single function with overloads
-def resolve(d: DateValue, /) -> Optional[dt.date]:
+@overload
+def resolve(d: DateValue, /) -> Optional[dt.date]: ...
+
+@overload
+def resolve(d: DateValue, /, strict: Literal[True]) -> dt.date: ...
+
+def resolve(d: DateValue, /, strict: bool=False): # , default: Optional[dt.date]=None
     """
     *`@returns`*
     - `parse(d) if isinstance(d, str)`
@@ -37,13 +41,18 @@ def resolve(d: DateValue, /) -> Optional[dt.date]:
     - `d if isinstance(d, dt.date)`
     - `else None`
     """
-    return (
+    result = (
         parse(d) if isinstance(d, str)
         else d.date() if isinstance(d, dt.datetime)
         else d if isinstance(d, dt.date)
         else None
     )
-resolve_date = resolve # temp alias
+    if (result is None and strict):
+        raise ValueError(LogMsg.bad_arg(
+            d, "date_value", "Unable to resolve value to date", 
+            dt.date, dt.datetime, str
+            ))
+    return result
 
 def strict_resolve_date(d: DateValue, /) -> dt.date:
     """
@@ -359,7 +368,7 @@ def compute_date(
         month = options.month
         day = options.day
 
-    base = strict_resolve_date(anchor) if anchor else today()
+    base = resolve(anchor, strict=True) if anchor else today()
     
     result = (
         base
@@ -397,7 +406,7 @@ def previous_weekday(
     """
     if not (Weekday.MONDAY <= weekday <= Weekday.SUNDAY):
         raise ValueError(f"weekday must be in range 0..6 (Mon=0..Sun=6); got {weekday}")
-    ref = To.datetime(strict_resolve_date(ref) if ref else today())
+    ref = To.datetime(resolve(ref, strict=True) if ref else today())
 
     
     current_weekday = ref.weekday()
@@ -440,7 +449,7 @@ def next_weekday(
     """
     if not (Weekday.MONDAY <= weekday <= Weekday.SUNDAY):
         raise ValueError(f"weekday must be in range 0..6 (Mon=0..Sun=6); got {weekday}")
-    ref = To.datetime(strict_resolve_date(ref) if ref else today())
+    ref = To.datetime(resolve(ref, strict=True) if ref else today())
 
 
     # If caller allows "same weekday", return midnight of dt's date when it matches.
