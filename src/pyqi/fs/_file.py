@@ -129,6 +129,9 @@ def stage_file(
     dst: StrPath,
     overwrite: bool=False
 ) -> Path:
+    """
+    *`@param`* `dst (StrPath)` - can be filepath or dirpath
+    """
     try:
         src = to_path(src)
         wait_for_file_unlock(src)
