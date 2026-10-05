@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from typing import (Any, NotRequired, Self, TypedDict, Optional, TypeVar, Generic)
 from lute import LogMsg
 from .. import _json as Json, _dt as dt
-
+from .._utils import export
 T = TypeVar('T') # , bound=Mapping
 
 class UpdateManifestDict(TypedDict):
@@ -45,3 +45,6 @@ class UpdateManifest(Json.Serial[UpdateManifestDict], Generic[T]):
             )
         except Exception as e:
             raise RuntimeError(LogMsg.err(error=e)) from e
+
+
+__all__ = export(UpdateManifestDict, UpdateManifest)

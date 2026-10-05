@@ -1,9 +1,12 @@
 """
 *`@file`* `pyqi/types`
 """
-
+from enum import (StrEnum, IntEnum)
 from typing import (Iterable, TypeAlias, TypeGuard, Any, TypeVar)
+from ._utils import export
 T = TypeVar('T')
+StrEnumT = TypeVar("StrEnumT", bound=StrEnum)
+IntEnumT = TypeVar("IntEnumT", bound=IntEnum)
 
 Primitive: TypeAlias = str | int | float | bool | None
 
@@ -39,3 +42,28 @@ def resolve_arbitrary(
     if (atomic_to_singleton and is_atomic(value)):
         return (value,) # type: ignore
     return (value,) if not isinstance(value, (Iterable)) else tuple(value)
+
+FlexStr: TypeAlias = StrEnumT | str
+FlexInt: TypeAlias = IntEnumT | int
+
+
+class cached_classproperty:
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, owner):
+        if owner is None:
+            return self
+        # Compute the value using the class (owner)
+        value = self.func(owner)
+        # Cache the calculated value directly onto the class, overwriting the descriptor
+        setattr(owner, self.func.__name__, value)
+        return value
+
+
+__all__ = export(
+    "Primitive", "Atomic", is_primitive, is_atomic, 
+    "Arbitrary", "Resolved", resolve_arbitrary, 
+    "FlexStr", "FlexInt", 
+    cached_classproperty
+)

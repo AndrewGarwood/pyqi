@@ -3,8 +3,8 @@
 """
 
 from pathlib import Path
-
 from ._enum import BaseStrEnum
+from .._utils import export
 
 class Delimiter(BaseStrEnum):
     """
@@ -40,3 +40,5 @@ def get_header_length(
             return 0
         ncols = len(header.split(delimiter))
         return ncols
+
+__all__ = export(Delimiter, get_header_length)

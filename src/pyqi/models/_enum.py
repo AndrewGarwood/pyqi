@@ -6,6 +6,7 @@ from functools import cached_property, cache
 from enum import (Enum, StrEnum, IntEnum)
 from typing import (Any, Generic, TypeVar, Self, TypeGuard)
 from lute import LogMsg, annotate
+from .._utils import export
 
 
 
@@ -135,19 +136,6 @@ class MetaEnum(Generic[ValueT, MetaT], Enum):
 I'd prefer BaseStrEnum and BaseIntEnum both inherit from BaseEnum<ValueT>, 
 but type hint no bueno. at least for 3.11
 """
-class cached_classproperty:
-    def __init__(self, func):
-        self.func = func
-
-    def __get__(self, instance, owner):
-        if owner is None:
-            return self
-        # Compute the value using the class (owner)
-        value = self.func(owner)
-        # Cache the calculated value directly onto the class, overwriting the descriptor
-        setattr(owner, self.func.__name__, value)
-        return value
-    
 # ============================================================================
 # StrEnum
 # ============================================================================
@@ -300,3 +288,7 @@ class BaseIntEnum(IntEnum):
                 received=annotate(item),
                 error=annotate(e)
             )) from e
+
+
+
+__all__ = export(MetaEnum, BaseStrEnum, BaseIntEnum)

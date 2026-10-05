@@ -7,6 +7,7 @@ from .._json import (Serial)
 from ._enum import (BaseStrEnum)
 from enum import (auto, StrEnum, IntEnum)
 from lute import LogMsg
+from .._utils import export
 
 class SortOrder(BaseStrEnum):
     ASCENDING = auto()
@@ -56,3 +57,6 @@ class SortOptions(Serial[SortOptionsDict], Generic[K]):
             "by": self.by,
             "order": self.order
         }
+
+
+__all__ = export(SortOrder, SortOptionsDict, SortOptions)

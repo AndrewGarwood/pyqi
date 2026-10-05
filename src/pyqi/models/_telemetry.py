@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 import time
-
+from .._utils import export
 
 @dataclass(slots=True)
 class Telemetry:
@@ -54,3 +54,6 @@ class Telemetry:
         if end is None:
             end = time.monotonic()
         return end - self._started_monotonic
+
+
+__all__ = export(Telemetry)

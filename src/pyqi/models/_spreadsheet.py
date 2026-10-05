@@ -5,6 +5,7 @@
 from ._enum import (MetaEnum)
 from dataclasses import dataclass
 from typing import (Optional)
+from .._utils import export
 
 
 @dataclass(frozen=True)
@@ -41,3 +42,5 @@ class SpreadsheetFileExt(MetaEnum):
     @property
     def is_excel(self) -> bool:
         return self.meta.is_excel
+
+__all__ = export(SpreadsheetMeta, SpreadsheetFileExt)
