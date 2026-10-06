@@ -1,0 +1,66 @@
+"""
+*`@file`* `models/_filter/operator`
+"""
+from .._enum import BaseStrEnum
+from ..._utils import export
+
+
+
+class NumberOperator(BaseStrEnum):
+    """
+    ```
+    IS_EQUAL_TO = 'IS_EQUAL_TO'
+    IS_NOT_EQUAL_TO = 'IS_NOT_EQUAL_TO'
+    IS_GREATER_THAN_OR_EQUAL_TO = 'IS_GREATER_THAN_OR_EQUAL_TO'
+    IS_GREATER_THAN = 'IS_GREATER_THAN'
+    IS_LESS_THAN_OR_EQUAL_TO = 'IS_LESS_THAN_OR_EQUAL_TO'
+    IS_LESS_THAN = 'IS_LESS_THAN'
+    ```
+    """
+    IS_EQUAL_TO = 'IS_EQUAL_TO'
+    IS_NOT_EQUAL_TO = 'IS_NOT_EQUAL_TO'
+    IS_GREATER_THAN_OR_EQUAL_TO = 'IS_GREATER_THAN_OR_EQUAL_TO'
+    IS_GREATER_THAN = 'IS_GREATER_THAN'
+    IS_LESS_THAN_OR_EQUAL_TO = 'IS_LESS_THAN_OR_EQUAL_TO'
+    IS_LESS_THAN = 'IS_LESS_THAN'
+
+
+
+class Operator(BaseStrEnum):
+    """
+    ```
+    # ==== NumberOperator ====
+    IS_EQUAL_TO = 'IS_EQUAL_TO'
+    IS_NOT_EQUAL_TO = 'IS_NOT_EQUAL_TO'
+    IS_GREATER_THAN_OR_EQUAL_TO = 'IS_GREATER_THAN_OR_EQUAL_TO'
+    IS_GREATER_THAN = 'IS_GREATER_THAN'
+    IS_LESS_THAN_OR_EQUAL_TO = 'IS_LESS_THAN_OR_EQUAL_TO'
+    IS_LESS_THAN = 'IS_LESS_THAN'
+    # ========================
+    CONTAINS = 'CONTAINS'
+    DOES_NOT_CONTAIN = 'DOES_NOT_CONTAIN'
+    STARTS_WITH = 'STARTS_WITH'
+    ENDS_WITH = 'ENDS_WITH'
+    IS_NULL = 'IS_NULL'
+    IS_NOT_NULL = 'IS_NOT_NULL'
+    IS_BETWEEN = 'IS_BETWEEN'
+    ```
+    """
+    IS_EQUAL_TO = 'IS_EQUAL_TO'
+    IS_NOT_EQUAL_TO = 'IS_NOT_EQUAL_TO'
+    IS_GREATER_THAN_OR_EQUAL_TO = 'IS_GREATER_THAN_OR_EQUAL_TO'
+    IS_GREATER_THAN = 'IS_GREATER_THAN'
+    IS_LESS_THAN_OR_EQUAL_TO = 'IS_LESS_THAN_OR_EQUAL_TO'
+    IS_LESS_THAN = 'IS_LESS_THAN'
+    CONTAINS = 'CONTAINS'
+    DOES_NOT_CONTAIN = 'DOES_NOT_CONTAIN'
+    STARTS_WITH = 'STARTS_WITH'
+    ENDS_WITH = 'ENDS_WITH'
+    IS_NULL = 'IS_NULL'
+    IS_NOT_NULL = 'IS_NOT_NULL'
+    IS_BETWEEN = 'IS_BETWEEN'
+    IS_IN = 'IS_IN'
+    IS_NOT_IN = 'IS_NOT_IN'
+
+
+__all__ = export(NumberOperator, Operator)

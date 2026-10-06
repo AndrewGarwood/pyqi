@@ -63,8 +63,8 @@ class FormatString(String.BaseEnum):
 
     DT_STAMP = "%Y%m%dT%H%M%S"
 
-    MDY_SLASH = "%m/%d/%y" # Code.DATE_MDY.value
-    MDY_DOT = "%m.%d.%y"
+    MDY_SLASH = "%m/%d/%Y" # Code.DATE_MDY.value
+    MDY_DOT = "%m.%d.%Y"
     MDY_TIME_MERIDIAN_SLASH = "%m/%d/%Y %I:%M:%S %p"
 
     MY_SLASH ="%m/%Y"
