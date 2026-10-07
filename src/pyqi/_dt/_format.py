@@ -5,9 +5,11 @@ from __future__ import annotations
 from datetime import date, datetime
 from lute import LogMsg
 from typing import (Literal)
-from .. import (_array as Array, _string as String)
+from .. import (_array as Array)
+from ..models._enum import BaseStrEnum
+from .._string.operator import contains
 
-class FormatCode(String.BaseEnum):
+class FormatCode(BaseStrEnum):
     MONTH_NAME = "%B"
     MONTH_ABBR = "%b" # or %h ?
     MONTH_NUM = "%m"
@@ -55,7 +57,7 @@ class FormatCode(String.BaseEnum):
 
 DateFormatCode = FormatCode
 
-class FormatString(String.BaseEnum):
+class FormatString(BaseStrEnum):
     YMD_HYPHEN = "%Y-%m-%d" # Code.DATE_YMD.value
     YMD_DOT = "%Y.%m.%d"
     YMD_NONE = "%Y%m%d"
@@ -109,7 +111,7 @@ def can_format(s: str, /) -> bool:
     = whether `<date|datetime|time>.strftime(s) will change s` """
     return (
         s in FORMAT_STRINGS 
-        or String.contains(s, FormatCode.values(), ignore_case=False)
+        or contains(s, FormatCode.values(), ignore_case=False)
     )
 
 def resolve_optional_date_code(

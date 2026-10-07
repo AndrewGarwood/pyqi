@@ -3,7 +3,7 @@
 """
 
 from __future__ import annotations
-from ._enum import BaseStrEnum
+from ..models._enum import BaseStrEnum
 from ._input import (StrInput, resolve_str_input)
 from ..models._registry import Registry
 import re
