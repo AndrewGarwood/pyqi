@@ -9,7 +9,7 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from typing import (Any, TypeVar, Self, Generic, TypeGuard, Iterable)
-from pydantic import BaseModel
+# from pydantic import BaseModel
 from lute import LogMsg
 from .types import (JsonDict, JsonValue, is_json_value)
 from ..types import is_primitive
@@ -173,7 +173,15 @@ class Serial(ABC, Generic[T]):
                 f"Could not write {type(self).__name__} "
                 f"to {resolved_path}",
             )) from e
+        
+    def __str__(self) -> str:
+        return (
+            f"<{self.__class__.__name__}>" 
+            + json.dumps(self.to_dict(), indent=4)
+        )
 
+    def __repr__(self) -> str: return self.__str__()
+    
 SerializableDataClass = Serial
 
 
