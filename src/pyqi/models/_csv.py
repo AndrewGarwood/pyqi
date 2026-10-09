@@ -4,7 +4,7 @@
 
 from pathlib import Path
 from ._enum import BaseStrEnum
-from .._utils import export
+from ..utils import export
 
 class Delimiter(BaseStrEnum):
     """

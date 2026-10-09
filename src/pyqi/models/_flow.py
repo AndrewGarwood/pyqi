@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import (Generic, TypeVar)
 from enum import StrEnum
 from datetime import datetime
-from .._utils import export
+from ..utils import export
 
 StageT = TypeVar("StageT", bound=(StrEnum))
 

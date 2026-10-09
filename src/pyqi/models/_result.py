@@ -7,11 +7,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import (Generic, Optional, TypeVar, Any)
 from lute import LogMsg
-from .._utils import export
+from ..utils import (export, HasDunderName)
 
 T = TypeVar("T")
 
-@dataclass(frozen=False)
 class Result(Generic[T]):
     """
     `Result(Generic[T])`
@@ -28,14 +27,18 @@ class Result(Generic[T]):
     data: Optional[T]
     error: Optional[BaseException | object]=None
     def __init__(self, 
-        source: Optional[str]=None,
+        source: Optional[str | HasDunderName]=None,
         data: Optional[T]=None, 
         success: Optional[bool]=None, 
         message: Optional[str | LogMsg]=None, 
         error: Optional[BaseException | object]=None,
         **kwargs
     ):
-        self.source = source or "[Result]"
+        self.source = (
+            source if isinstance(source, str) 
+            else source.__name__ if source 
+            else "[Result]"
+        )
         self.success = (
             success if isinstance(success, bool) 
             else (
@@ -54,7 +57,7 @@ class Result(Generic[T]):
     
     @classmethod
     def ok(cls, 
-        source: str,
+        source: str | HasDunderName,
         /, 
         data: Optional[T] = None,
         message: Optional[str | LogMsg] = None,
@@ -64,12 +67,13 @@ class Result(Generic[T]):
     @classmethod
     def fail(
         cls,
-        source: str, 
+        source: str | HasDunderName, 
         /,
         message: Optional[str | LogMsg] = None,
         error: Optional[Exception] = None,
         data: Optional[T] = None,
     ) -> Result[T]:
+        
         return cls(source, success=False, message=message, data=data, error=error)
 
 

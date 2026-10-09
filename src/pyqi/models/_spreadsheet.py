@@ -5,7 +5,7 @@
 from ._enum import (MetaEnum)
 from dataclasses import dataclass
 from typing import (Optional)
-from .._utils import export
+from ..utils import export
 
 
 @dataclass(frozen=True)

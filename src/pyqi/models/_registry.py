@@ -6,7 +6,7 @@ from collections.abc import (Callable, Mapping)
 from typing import (Any, Generic, TypeVar, cast)
 from ._enum import BaseStrEnum
 from enum import StrEnum
-from .._utils import export
+from ..utils import export
 
 import lute
 LogMsg = lute.LogMsg

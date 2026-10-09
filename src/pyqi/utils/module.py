@@ -1,5 +1,5 @@
 """
-*`@file`* `_utils`
+*`@file`* `utils/module`
 """
 from typing import Protocol
 

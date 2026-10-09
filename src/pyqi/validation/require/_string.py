@@ -5,7 +5,7 @@
 from typing import (Any, TypeVar)
 from enum import StrEnum
 from lute import LogMsg
-from pyqi._utils import export_symbols
+from pyqi.utils import export_symbols
 from .. import guard
 
 StringT = TypeVar('StringT', bound=str | StrEnum)

@@ -3,7 +3,7 @@
 """
 from dataclasses import dataclass
 from typing import (Any, Self, TypedDict)
-from .._utils import export
+from ..utils import export
 from .._json._serial import Serial
 from ..validation import require
 

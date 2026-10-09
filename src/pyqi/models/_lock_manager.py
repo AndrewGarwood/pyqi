@@ -38,7 +38,7 @@ class LockManager:
             self._claimed.discard(handle)
 
     @contextmanager
-    def engage_lock(self):
+    def engage_lock(self, sleep: float=0.25):
         thread = f"{threading.current_thread().name}"
         start = time.monotonic()
         self.acquire(blocking=True)
@@ -49,6 +49,7 @@ class LockManager:
             wait_time=f"{acquired - start:.2f}s"
         ))
         try:
+            time.sleep(sleep)
             yield
         finally:
             self.log.debug(LogMsg(

@@ -6,7 +6,7 @@ from functools import cached_property, cache
 from enum import (Enum, StrEnum, IntEnum)
 from typing import (Any, Generic, TypeVar, Self, TypeGuard)
 from lute import LogMsg, annotate
-from .._utils import export
+from ..utils import export
 
 
 
@@ -201,7 +201,22 @@ class BaseStrEnum(StrEnum):
         return key in cls.__members__
 
     @classmethod
+    def can_resolve(cls, item: str, /) -> bool:
+        if (isinstance(item, cls)):
+            return True
+        try:
+            _ = cls[item]
+            return True
+        except KeyError:
+            try:
+                _ = cls(item)
+                return True
+            except Exception:
+                return False
+
+    @classmethod
     def resolve(cls, item: str | Self, /) -> Self:
+        """ *`@raises`* `ValueError` if `item` is not member, key, or value """
         if (isinstance(item, cls)):
             return item
         try: 
@@ -210,7 +225,7 @@ class BaseStrEnum(StrEnum):
             try: 
                 return cls(item)
             except Exception as ve:
-                raise RuntimeError(LogMsg(
+                raise ValueError(LogMsg(
                     f"Unable to resolve item to {cls.__name__}",
                     expected=f"cls | str (element of cls.keys() or cls.values())",
                     received=annotate(item),
@@ -277,18 +292,28 @@ class BaseIntEnum(IntEnum):
 
     @classmethod
     def resolve(cls, item: str | int | Self, /) -> Self:
+        """ *`@raises`* `ValueError` if `item` is not member, key, or value """
         if (isinstance(item, cls)): 
             return item
         try:
             return cls(item) if isinstance(item, int) else cls[item]
         except Exception as e:
-            raise RuntimeError(LogMsg(
+            raise ValueError(LogMsg(
                 f"Unable to resolve item to {cls.__name__}",
                 expected=f"cls | str (element of self.keys()) | int (element of self.values())",
                 received=annotate(item),
                 error=annotate(e)
             )) from e
 
+    @classmethod
+    def can_resolve(cls, item: str | int | Self, /) -> bool:
+        if (isinstance(item, cls)): 
+            return True
+        try:
+            _ = cls(item) if isinstance(item, int) else cls[item]
+            return True
+        except Exception:
+            return False
 
 
 __all__ = export(MetaEnum, BaseStrEnum, BaseIntEnum)

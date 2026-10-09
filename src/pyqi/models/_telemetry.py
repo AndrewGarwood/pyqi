@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 import time
-from .._utils import export
+from ..utils import export
 
 @dataclass(slots=True)
 class Telemetry:

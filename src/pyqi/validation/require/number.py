@@ -5,7 +5,7 @@
 from ..guard import number as Number
 from typing import Any
 from lute import LogMsg
-from pyqi._utils import export_symbols
+from pyqi.utils import export_symbols
 
 def integer(value: Any, /, name:str='arg'):
     if (not Number.is_integer(value)):

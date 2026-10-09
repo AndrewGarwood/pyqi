@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import (Any, Self, TypedDict, TypeVar)
 from lute import LogMsg, annotate
 from ... import _json as Json
-from ..._utils import export
+from ...utils import export
 from .operator import Operator
 
 class FilterDict(TypedDict):

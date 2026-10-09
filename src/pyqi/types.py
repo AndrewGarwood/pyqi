@@ -3,7 +3,7 @@
 """
 from enum import (StrEnum, IntEnum)
 from typing import (Iterable, TypeAlias, TypeGuard, Any, TypeVar)
-from ._utils import export
+from .utils import export
 T = TypeVar('T')
 StrEnumT = TypeVar("StrEnumT", bound=StrEnum)
 IntEnumT = TypeVar("IntEnumT", bound=IntEnum)

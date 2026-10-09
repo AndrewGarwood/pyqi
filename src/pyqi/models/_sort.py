@@ -7,7 +7,7 @@ from .._json import (Serial)
 from ._enum import (BaseStrEnum)
 from enum import (auto, StrEnum, IntEnum)
 from lute import LogMsg
-from .._utils import export
+from ..utils import export
 
 class SortOrder(BaseStrEnum):
     ASCENDING = auto()
