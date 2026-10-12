@@ -11,17 +11,20 @@ from ..utils import export
 
 @dataclass(slots=True)
 class Telemetry:
-    started_at: Optional[datetime] = None
-    ended_at: Optional[datetime] = None
-
+    """ 
+    - *`@method`* `start()` sets `_started_at` and `_started_monotonic` 
+    - *`@method`* `stop()` sets `_ended_at` and `_ended_monotonic`
+    """
+    _started_at: Optional[datetime] = None
+    _ended_at: Optional[datetime] = None
     _started_monotonic: Optional[float] = None
     _ended_monotonic: Optional[float] = None
 
     def start(self) -> None:
         if self._started_monotonic is not None:
             raise RuntimeError("Telemetry has already been started")
-        self.started_at = datetime.now()
-        self.ended_at = None
+        self._started_at = datetime.now()
+        self._ended_at = None
         self._started_monotonic = time.monotonic()
         self._ended_monotonic = None
 
@@ -30,12 +33,12 @@ class Telemetry:
             raise RuntimeError("Telemetry has not been started")
         if self._ended_monotonic is not None:
             return
-        self.ended_at = datetime.now()
+        self._ended_at = datetime.now()
         self._ended_monotonic = time.monotonic()
 
     def reset(self) -> None:
-        self.started_at = None
-        self.ended_at = None
+        self._started_at = None
+        self._ended_at = None
         self._started_monotonic = None
         self._ended_monotonic = None
 
@@ -48,11 +51,13 @@ class Telemetry:
 
     @property
     def elapsed(self) -> Optional[float]:
+        """ 
+        *`@returns`* `(self._ended_monotonic or time.monotonic()) - (self._started_monotonic)`
+        - or `None` `if self._started_monotonic is None`
+        """
         if self._started_monotonic is None:
             return None
-        end = self._ended_monotonic
-        if end is None:
-            end = time.monotonic()
+        end = self._ended_monotonic or time.monotonic()
         return end - self._started_monotonic
 
 

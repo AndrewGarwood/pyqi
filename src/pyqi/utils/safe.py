@@ -7,13 +7,16 @@ from typing import (Any, Literal)
 
 
 def readattr(obj: Any, attr: str, /, use_repr: bool=False) -> Any | Literal["<unavailable>"] | str:
-    _MISSING = object()
-    value = getattr(obj, attr, _MISSING)
-    return (
-        "<unavailable>" if value is _MISSING 
-        else value if (not use_repr) 
-        else repr(value)
-    )
+    try:
+        _MISSING = object()
+        value = getattr(obj, attr, _MISSING)
+        return (
+            "<unavailable>" if value is _MISSING 
+            else value if (not use_repr) 
+            else repr(value)
+        )
+    except Exception as e:
+        return f"<unavailable> ({type(e).__name__}) {str(e)}"
 
 def invoke_method(obj: Any, method: str, *args, **kwargs) -> Any | Literal["<unavailable>", "<not_callable>", "<method_failed>"] | str:
     value = readattr(obj, method)
