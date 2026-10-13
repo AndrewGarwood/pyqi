@@ -55,8 +55,6 @@ class FormatCode(BaseStrEnum):
     """ Time in 24-hour notation format `%H:%M:%S` """
     TIME_12 = "%r"
 
-DateFormatCode = FormatCode
-
 class FormatString(BaseStrEnum):
     YMD_HYPHEN = "%Y-%m-%d" # Code.DATE_YMD.value
     YMD_DOT = "%Y.%m.%d"
@@ -81,8 +79,6 @@ class FormatString(BaseStrEnum):
         if (date_sep != "-"):
             s = s.replace('-', date_sep)
         return s
-
-DateFormatString = FormatString
 
 def resolve_date_code(
     ref_date: date | datetime,
