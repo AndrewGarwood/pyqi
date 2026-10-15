@@ -5,6 +5,7 @@
 from __future__ import annotations
 import json
 from datetime import date, datetime, time
+from functools import cached_property
 from pathlib import Path
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
@@ -14,6 +15,7 @@ from lute import LogMsg
 from .types import (JsonDict, JsonValue, is_json_value)
 from ..types import is_primitive
 from .. import _array as Array
+from ..utils import export
 
 
 T = TypeVar("T", bound=(Mapping))
@@ -22,18 +24,23 @@ def is_serializeable(value: Any, /) -> TypeGuard[JsonValue | Serial]:
     return (isinstance(value, Serial) or is_json_value(value))
 
 def serialize(value: Any, /) -> JsonValue:
-    if (isinstance(value, Serial)): 
-        return value.to_dict()
+    # if (isinstance(value, Serial)): 
+    #     return value.to_dict()
     if (is_primitive(value)):
         return value
     if isinstance(value, (date, datetime, time)):
         return value.isoformat()
-    if (Array.isArray(value) or isinstance(value, Iterable)):
+    if (Array.isArray(value)):
         return Array.map(value, serialize)
+    if (isinstance(value, Mapping)):
+        return {
+            k: serialize(v) 
+            for k, v in value.items()
+        }
     if (is_json_value(value)):
         return serialize(value)
-    raise ValueError(LogMsg(
-        f"Unable to serialize value: ({type(value).__name__}) {value=}"
+    raise DataModelError(LogMsg(
+        f"Unable to serialize value: {type(value).__name__=}"
     ))
 
 class DataModelError(ValueError):
@@ -61,9 +68,9 @@ class Serial(ABC, Generic[T]):
     """
     def keys(self):
         """ 
-        *`@returns`* `Array.filter(dir(self), lambda k: not is_dunder_prop(k))`
+        *`@returns`* `Array.filter(dir(self), lambda k: not _is_builtin_prop(k))`
         """
-        return tuple(Array.filter(dir(self), lambda k: not is_dunder_prop(k)))
+        return tuple(Array.filter(dir(self), lambda k: not _is_builtin_prop(k)))
 
     def items(self) -> tuple[tuple[str, Any | None], ...]:
         """ 
@@ -181,13 +188,32 @@ class Serial(ABC, Generic[T]):
         )
 
     def __repr__(self) -> str: return self.__str__()
-    
-SerializableDataClass = Serial
 
+    def __attr_label__(self, attr: str, /) -> str:
+        """ 
+        *`@returns`* `f"{self.__class__.__name__}.{attr}"`
+        """
+        return f"{self.__cls_name__}.{attr}"
 
-def is_dunder_prop(value: str, /):
+    @cached_property
+    def __cls_name__(self):
+        return self.__class__.__name__
+
+def _is_builtin_prop(value: str, /) -> bool:
+    """
+    *`@returns`* `(is_dunder_prop(value) or value in _PROPS_TO_IGNORE)`
+    """
+    return (is_dunder_prop(value) or value in _PROPS_TO_IGNORE)
+
+_PROPS_TO_IGNORE: set[str] = set([
+    '_is_protocol',
+])
+
+def is_dunder_prop(value: str, /) -> bool:
     return (
         len(value) > 4 
         and value.startswith("__") 
         and value.endswith("__")
     )
+
+__all__ = export(Serial, serialize, is_serializeable, DataModelError)

@@ -34,3 +34,18 @@ def to_str(value: Any, /, use_repr: bool=False) -> str | Literal["<unprintable>"
         return (str(value) if (not use_repr) else repr(value))
     except Exception: 
         return "<unprintable>"
+
+
+def attr_label(value: Any, attr: str, /) -> str:
+    """
+    *`@returns`* 
+    `f"{value.__name__}.{attr}" 
+    if isinstance(value, type) 
+    else f"{type(value).__name__}.{attr}"`
+    """
+    try:
+        if (isinstance(value, type)):
+            return f"{value.__name__}.{attr}"
+        return f"{type(value).__name__}.{attr}"
+    except Exception:
+        return f"<unknown>.{attr}"

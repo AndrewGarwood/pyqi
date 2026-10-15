@@ -62,7 +62,8 @@ def terminate_process_instances(exepath: StrPath, /) -> int:
 
 def launch_executable(exepath: StrPath, /, terminate_existing: bool=True) -> bool:
     """
-    Launch an executable `(.exe)` if it is not already running.
+    Launch an executable `(.exe)` if it is not already 
+    running with `subprocess.Popen([str(exepath)])`
     
     Returns
     -------

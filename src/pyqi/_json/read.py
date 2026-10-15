@@ -6,7 +6,7 @@
 import json
 from pathlib import Path
 from lute import LogMsg, annotate
-from typing import (TypeVar, TypeAlias)
+from typing import (Any, TypeVar, TypeAlias)
 from .types import (
     JsonObject, 
     JsonScalar, 
@@ -22,7 +22,7 @@ def file(path: StrPath, /, **kwargs) -> JsonValue:
     except Exception as e:
         raise RuntimeError(LogMsg.err(e, received=annotate(path))) from e
 
-def object(path: StrPath, /, **kwargs) -> JsonObject:
+def object(path: StrPath, /, **kwargs) -> dict[str, Any]: # JsonObject
     try:
         with Path(path).open('r', encoding="utf-8") as f:
             value: JsonObject = json.load(f, **kwargs)

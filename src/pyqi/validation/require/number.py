@@ -5,7 +5,7 @@
 from ..guard import number as Number
 from typing import Any
 from lute import LogMsg
-from pyqi.utils import export_symbols
+from pyqi.utils import export
 
 def integer(value: Any, /, name:str='arg'):
     if (not Number.is_integer(value)):
@@ -37,6 +37,25 @@ def positive_integer(value: Any, /, name:str='arg'):
         ))
     return value
 
+def non_negative_number(value: Any, /, name: str='arg'):
+    if (not Number.is_non_negative_number(value)):
+        raise ValueError(LogMsg.bad_arg(
+            value, name, "non-negative number is required", 
+            "(int | float) >= 0"
+        ))
+    return value
+
+
+def non_negative_integer(value: Any, /, name: str='arg'):
+    if (not Number.is_integer(value) or value < 0):
+        raise ValueError(LogMsg.bad_arg(
+            value, name, 
+            "non-negative integer is required", 
+            "(int) >= 0"
+        ))
+    return value
+
+
 def positive_number(value: Any, /, name: str='arg'):
     if (not Number.is_positive_number(value)):
         raise ValueError(LogMsg.bad_arg(
@@ -45,6 +64,8 @@ def positive_number(value: Any, /, name: str='arg'):
         ))
     return value
 
-__all__ = [ 
-    *export_symbols(integer, float, number, positive_number, positive_integer)
-] # type: ignore
+__all__ = export(
+    integer, float, number, 
+    positive_number, positive_integer, 
+    non_negative_integer, non_negative_number
+)

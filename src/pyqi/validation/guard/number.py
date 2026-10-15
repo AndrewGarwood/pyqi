@@ -18,5 +18,5 @@ def is_number(value: Any, /) -> TypeGuard[int | float]:
 def is_positive_number(value: Any, /) -> TypeGuard[int | float]:
     return is_number(value) and value > 0
 
-def is_nonnegative_number(value, Any, /) -> TypeGuard[int | float]:
+def is_non_negative_number(value: Any, /) -> TypeGuard[int | float]:
     return is_number(value) and value >=0
