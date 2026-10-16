@@ -2,9 +2,10 @@
 *`@file`* `pyqi/types`
 """
 from enum import (StrEnum, IntEnum)
-from typing import (Iterable, TypeAlias, TypeGuard, Any, TypeVar)
+from typing import (Iterable, TypeAlias, TypeGuard, Any, TypeVar, Protocol, runtime_checkable)
 from .utils import export
 T = TypeVar('T')
+T_CNTRV = TypeVar("T_CNTRV", contravariant=True)
 StrEnumT = TypeVar("StrEnumT", bound=StrEnum)
 IntEnumT = TypeVar("IntEnumT", bound=IntEnum)
 
@@ -60,10 +61,24 @@ class cached_classproperty:
         setattr(owner, self.func.__name__, value)
         return value
 
+@runtime_checkable
+class SupportsComparison(Protocol[T_CNTRV]):
+    """ `@runtime_checkable Protocol[T_CNTRV]`
+    ```
+    def __lt__(self, other: T_CNTRV, /) -> bool: ...
+    def __gt__(self, other: T_CNTRV, /) -> bool: ...
+    
+    >>> isinstance(3, SupportsComparison)
+    True
+    ```
+    """
+    def __lt__(self, other: T_CNTRV, /) -> bool: ...
+    def __gt__(self, other: T_CNTRV, /) -> bool: ...
 
 __all__ = export(
     "Primitive", "Atomic", is_primitive, is_atomic, 
     "Arbitrary", "Resolved", resolve_arbitrary, 
     "FlexStr", "FlexInt", 
-    cached_classproperty
+    cached_classproperty,
+    SupportsComparison
 )
