@@ -124,9 +124,10 @@ def dated_filename(
     how: RenameOperation | Literal['auto']= RenameOperation.PREPEND
 ) -> str:
     """ 
-    *`@returns`* `f"{datestamp(ref)}_{sanitize_filename(base)}{extension}"`
-    - `f"{datestamp(ref)}{ext}"` if base is empty string
-    - prepends `'.'` to extension if not present
+    - *`@param`* `ext` - if `None`, tries to derive `ext` from `base`
+    - *`@returns`* `f"{datestamp(ref)}_{sanitize_filename(base)}{extension}"`
+        - `f"{datestamp(ref)}{ext}"` if base is empty string
+        - prepends `'.'` to extension if not present
     """
     ext = (
         Path(base).suffix if not ext

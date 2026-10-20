@@ -8,6 +8,7 @@ from typing import (
     TypeVar, TypeGuard
 )
 from ..utils.module import export
+from ..validation import require
 from ..types import (is_atomic)
 
 T = TypeVar('T')
@@ -23,11 +24,33 @@ def forEach(arr: Iterable[T], fn: Callable[[T], U], /) -> None:
     for x in arr: fn(x)
     return None
 
-def every(arr: Iterable[T], fn: Callable[[T], bool]=lambda x: bool(x), /) -> bool:
+
+def partition(arr: Iterable[T], batch_size: int, /) -> list[tuple[T, ...]]:
+    batch_size = require.positive_integer(batch_size)
+    elements = tuple(x for x in arr)
+    N = len(elements)
+    if (not N): return []
+    
+    batches: list[tuple[T, ...]] = []
+    for start in range(0, N, batch_size):
+        batches.append(elements[start:max(start+batch_size, N)])
+    
+    return batches
+
+
+def every(
+    arr: Iterable[T], 
+    fn: Callable[[T], bool]=bool, 
+    /
+) -> bool:
     """ *`@returns`* `all(map(arr, fn))` """
     return all(map(arr, fn))
 
-def some(arr: Iterable[T], fn: Callable[[T], bool]=lambda x: bool(x), /) -> bool:
+def some(
+    arr: Iterable[T], 
+    fn: Callable[[T], bool]=bool, 
+    /
+) -> bool:
     """ *`@returns`* `any(map(arr, fn))` """
     return any(map(arr, fn))
 
@@ -38,4 +61,5 @@ def isArray(arr: Any) -> TypeGuard[list[Any] | tuple[Any,...]]:
 def isNonAtomicSequence(arr: Any) -> TypeGuard[Sequence[Any]]:
     return (not is_atomic(arr) and (isinstance(arr, Sequence)))
 
-__all__ = export(map, forEach, every, some, isArray, isNonAtomicSequence)
+
+__all__ = export(map, forEach, every, some, isArray, isNonAtomicSequence, partition)

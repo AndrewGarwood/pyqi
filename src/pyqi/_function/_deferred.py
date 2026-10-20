@@ -45,3 +45,4 @@ class Deferred(Generic[P, R]):
             f"args={self._args!r}, "
             f"kwargs={self._kwargs!r})"
         )
+__all__ = ["Deferred"]

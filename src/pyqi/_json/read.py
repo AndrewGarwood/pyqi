@@ -38,7 +38,7 @@ def object(path: StrPath, /, **kwargs) -> dict[str, Any]: # JsonObject
             kwargs=str(kwargs)
         )) from e
 
-def array(path: StrPath, /, **kwargs) -> JsonArray:
+def array(path: StrPath, /, **kwargs) -> list[Any]: # JsonArray
     try:
         with Path(path).open('r', encoding="utf-8") as f:
             value: JsonArray = json.load(f, **kwargs)

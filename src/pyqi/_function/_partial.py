@@ -130,3 +130,6 @@ class PartialSecond(Generic[A, B, P, R]):
             f"args={self._args!r}, "
             f"kwargs={self._kwargs!r})"
         )
+
+
+__all__ = ["Partial", "PartialSecond"]
