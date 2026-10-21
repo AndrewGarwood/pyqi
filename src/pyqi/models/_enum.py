@@ -233,6 +233,11 @@ class BaseStrEnum(StrEnum):
                     value_error=annotate(ve)
                 )) from ve
 
+    @classmethod
+    def try_resolve(cls, item: str | Self, /) -> Self | None:
+        try: return cls.resolve(item)
+        except Exception: return None
+
 # ============================================================================
 # IntEnum
 # =============================================================================
@@ -304,6 +309,12 @@ class BaseIntEnum(IntEnum):
                 received=annotate(item),
                 error=annotate(e)
             )) from e
+
+    @classmethod
+    def try_resolve(cls, item: str | int | Self, /) -> Self | None:
+        try: return cls.resolve(item)
+        except Exception: return None
+
 
     @classmethod
     def can_resolve(cls, item: str | int | Self, /) -> bool:

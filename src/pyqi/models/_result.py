@@ -58,8 +58,11 @@ class Result(Generic[T]):
 
     def to_dict(self) -> dict[str, Any]:
         _data = (
-            safe.invoke_method(self.data, "__dict__") 
-            if self.data and hasattr(self.data, "__dict__") 
+        #     safe.invoke_method(self.data, "__dict__") 
+        #     if self.data and hasattr(self.data, "__dict__") 
+            safe.invoke_method(self.data, "to_dict") 
+            if self.data and hasattr(self.data, "to_dict") 
+            else str(self.data) if self.data 
             else None
         )
         return {

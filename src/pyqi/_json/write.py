@@ -3,14 +3,14 @@
 """
 import json
 from pathlib import (Path)
-from typing import Optional, TypeAlias
+from typing import Optional, TypeAlias, Any
 from lute import (LogMsg, annotate)
 from .types import (JsonValue)
 
 
 StrPath: TypeAlias = str | Path
 def file(
-    data: JsonValue, 
+    data: Any, 
     path: StrPath, 
     /,
     indent: Optional[int]=4, 
@@ -20,7 +20,7 @@ def file(
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open('w', encoding='utf-8') as f:
-            json.dump(data,f, indent=indent, **kwargs)
+            json.dump(data, f, indent=indent, **kwargs)
         return path
     except Exception as e:
         raise RuntimeError(LogMsg.err(

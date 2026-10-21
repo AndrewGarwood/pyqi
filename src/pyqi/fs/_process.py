@@ -3,9 +3,11 @@
 """
 
 from pathlib import Path
-import psutil,subprocess
+import psutil, subprocess
+from typing import Literal, overload
+from pyqi.utils.module import export
 from lute import (get_logger, LogMsg)
-from ._path import to_path
+from ._path import to_path, normalized
 from .types import (StrPath)
 
 mlog = get_logger(Path(__file__).parent.stem)
@@ -106,3 +108,72 @@ def start_process(exepath: StrPath, /, terminate_existing: bool=True) -> int:
     # TODO: launch then return pid
     raise NotImplementedError()
     # return launch_executable(exepath, terminate_existing)
+
+@overload
+def find_process_by_open_file(
+    path: StrPath, 
+    exepath: StrPath | None = None, 
+    /,
+    *,
+    strict: Literal[False]=False,
+    by_filename: bool=False
+) -> psutil.Process | None: ...
+
+@overload
+def find_process_by_open_file(
+    path: StrPath, 
+    exepath: StrPath | None = None, 
+    /,
+    *,
+    strict: Literal[True],
+    by_filename: bool=False
+) -> psutil.Process: ...
+
+def find_process_by_open_file(
+    path: StrPath, 
+    exepath: StrPath | None = None, 
+    /,
+    *,
+    strict: bool=False,
+    by_filename: bool=False
+):
+    """
+    *`@note`* `target = normalized(path).casefold() if not by_filename else to_path(path).name.casefold()`
+    """
+    target = (
+        normalized(path).casefold() 
+        if not by_filename 
+        else to_path(path).name.casefold()
+    )
+    exename = to_path(exepath).name.casefold() if exepath else None
+    holder: psutil.Process | None = None
+    for proc in psutil.process_iter(["pid", "name"]):
+        try:
+            if (exename):
+                name = proc.info['name']
+                if (str(name).casefold() != exename): continue
+            for f in proc.open_files():
+                if normalized(f.path).casefold() == target:
+                    holder = proc
+                    break
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+        except Exception as e:
+            mlog.warning(LogMsg.err(e, f"Error checking process"))
+    
+    if (holder is None and strict):
+        raise RuntimeError(LogMsg(
+            f"Failed to find process holding target file",
+            path=str(path),
+            exepath=str(exepath),
+            strict=strict
+        ))
+    return holder
+
+
+__all__ = export(
+    find_process_by_open_file, 
+    kill_procs, 
+    terminate_process_instances, 
+    launch_executable
+)

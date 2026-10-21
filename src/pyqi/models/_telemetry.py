@@ -5,7 +5,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
+from json import dumps
 import time
 from ..utils import export
 
@@ -60,5 +61,14 @@ class Telemetry:
         end = self._ended_monotonic or time.monotonic()
         return end - self._started_monotonic
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "started_at": self._started_at.isoformat() if self._started_at else None,
+            "ended_at": self._ended_at.isoformat() if self._ended_at else None,
+            "elapsed": self.elapsed
+        }
+
+    def __str__(self):
+        return dumps(self.to_dict(), indent=4)
 
 __all__ = export(Telemetry)
