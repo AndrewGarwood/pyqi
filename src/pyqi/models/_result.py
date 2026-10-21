@@ -3,11 +3,11 @@
 """
 
 from __future__ import annotations
-
+from datetime import datetime
 from dataclasses import dataclass
 from typing import (Generic, Optional, TypeVar, Any)
 from lute import LogMsg
-from ..utils import (export, HasDunderName)
+from ..utils import (export, HasDunderName, safe)
 
 T = TypeVar("T")
 
@@ -51,9 +51,25 @@ class Result(Generic[T]):
             None if message is None or isinstance(message, str) 
             else message._format()
         )
+        # self._result_timestamp = datetime.now()
         self.data = data
         self.error = error
         self.kwargs = kwargs
+
+    def to_dict(self) -> dict[str, Any]:
+        _data = (
+            safe.invoke_method(self.data, "__dict__") 
+            if self.data and hasattr(self.data, "__dict__") 
+            else None
+        )
+        return {
+            "source": self.source,
+            # "timestamp": self._result_timestamp.isoformat(),
+            "success": self.success,
+            "message": self.message,
+            "data": _data,
+            "error": str(self.error) if self.error else None
+        }
     
     @classmethod
     def ok(cls, 

@@ -33,7 +33,7 @@ def partition(arr: Iterable[T], batch_size: int, /) -> list[tuple[T, ...]]:
     
     batches: list[tuple[T, ...]] = []
     for start in range(0, N, batch_size):
-        batches.append(elements[start:max(start+batch_size, N)])
+        batches.append(elements[start:min(start+batch_size, N)])
     
     return batches
 

@@ -17,5 +17,5 @@ from .types import *
 from .models import (_csv as Csv)
 from ._array._reduce import (MutReducer)
 
-from .validation import (require)
+from .validation import (require, guard)
 from .utils import *
