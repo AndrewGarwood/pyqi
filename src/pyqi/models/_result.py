@@ -26,12 +26,14 @@ class Result(Generic[T]):
     message: Optional[str]
     data: Optional[T]
     error: Optional[BaseException | object]=None
+    notes: list[Any]
     def __init__(self, 
         source: Optional[str | HasDunderName]=None,
         data: Optional[T]=None, 
         success: Optional[bool]=None, 
         message: Optional[str | LogMsg]=None, 
         error: Optional[BaseException | object]=None,
+        # *notes,
         **kwargs
     ):
         self.source = (
@@ -55,6 +57,12 @@ class Result(Generic[T]):
         self.data = data
         self.error = error
         self.kwargs = kwargs
+        self.notes = []# list(notes)
+
+    def add_note(self, *note: Any) -> None:
+        for item in note:
+            self.notes.append(item)
+        # self.notes.append(note)
 
     def to_dict(self) -> dict[str, Any]:
         _data = (
@@ -71,7 +79,9 @@ class Result(Generic[T]):
             "success": self.success,
             "message": self.message,
             "data": _data,
-            "error": str(self.error) if self.error else None
+            "error": str(self.error) if self.error else None,
+            "notes": self.notes,
+            "kwargs": self.kwargs
         }
     
     @classmethod
@@ -80,8 +90,16 @@ class Result(Generic[T]):
         /, 
         data: Optional[T] = None,
         message: Optional[str | LogMsg] = None,
+        **kwargs
     ) -> Result[T]:
-        return cls(source, success=True, message=message, data=data, error=None)
+        return cls(
+            source, 
+            success=True, 
+            message=message, 
+            data=data, 
+            error=None, 
+            **kwargs
+        )
 
     @classmethod
     def fail(
@@ -91,9 +109,16 @@ class Result(Generic[T]):
         message: Optional[str | LogMsg] = None,
         error: Optional[Exception] = None,
         data: Optional[T] = None,
+        **kwargs
     ) -> Result[T]:
-        
-        return cls(source, success=False, message=message, data=data, error=error)
+        return cls(
+            source, 
+            success=False, 
+            message=message, 
+            data=data, 
+            error=error, 
+            **kwargs
+        )
 
 
 __all__ = export(Result)

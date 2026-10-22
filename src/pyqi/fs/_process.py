@@ -138,7 +138,12 @@ def find_process_by_open_file(
     by_filename: bool=False
 ):
     """
-    *`@note`* `target = normalized(path).casefold() if not by_filename else to_path(path).name.casefold()`
+    - *`@param`* `path` the full filepath (or filename if `by_filename == True`)
+    - *`@param`* `exepath` if provided, filter processes such 
+    that `info['name'].casefold() == to_path(exepath).name.casefold()`
+    - *`@param`* `by_filename` - whether a file is matched using its full path or just its name
+    - TODO: could instead introduce callable param. then could do things like `Function.Partial(String.contains, ...)`
+    to call on `proc.open_files()[i].path`
     """
     target = (
         normalized(path).casefold() 
@@ -153,7 +158,11 @@ def find_process_by_open_file(
                 name = proc.info['name']
                 if (str(name).casefold() != exename): continue
             for f in proc.open_files():
-                if normalized(f.path).casefold() == target:
+                compare_value = (
+                    normalized(f.path).casefold() if not by_filename 
+                    else Path(f.path).name.casefold()
+                )
+                if (compare_value == target):
                     holder = proc
                     break
         except (psutil.NoSuchProcess, psutil.AccessDenied):
