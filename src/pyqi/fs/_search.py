@@ -169,7 +169,7 @@ def get_timesorted_files(
         else get_date_str
     )
     target_files.sort(
-        key=lambda p: dt.datetime.strptime(
+        key=lambda p: dt.datetime_from.string(
             get_date_str.__call__(p.stem), 
             fmt
         ),

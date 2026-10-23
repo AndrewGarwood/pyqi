@@ -3,6 +3,7 @@
 """
 from .constants import *
 from ._format import *
+from .types import *
 
 from . import (
     _date as Date, 

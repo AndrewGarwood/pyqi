@@ -3,12 +3,10 @@
 """
 
 from __future__ import annotations
-from typing import (TypeAlias)
 import calendar
 import datetime as dt
 from ..models._enum import BaseIntEnum
 
-DateValue: TypeAlias = dt.date | dt.datetime | str
 
 class Weekday(BaseIntEnum):
     """ 

@@ -7,23 +7,30 @@ from typing import (Literal,  Optional, overload)
 from zoneinfo import ZoneInfo
 import dateutil
 from lute import LogMsg
-from .constants import (DateValue, EXCEL_EPOCH)
+from .types import (DateValue)
+from .constants import (EXCEL_EPOCH)
+from pyqi.utils.module import export
 
 
 def now(tz: Optional[ZoneInfo]=None,/):
     return dt.datetime.now(tz)
 
-def strftime(d: dt.datetime, fmt: str, /) -> str: # unnecessary function, but mb useful when import module...
+def strftime(d: dt.datetime, fmt: str, /) -> str: # redundant, but mb useful when import module...
     return d.strftime(fmt)
 
 
-def strptime(s: str, fmt: Optional[str]=None, /) -> dt.date:
+def strptime(s: str, fmt: Optional[str]=None, /) -> dt.datetime:
     return dt.datetime.strptime(s, fmt) if fmt else parse(s)
 
 
-def parse(date_str: str, /, parserinfo: Optional[dateutil.parser.parserinfo]=None, **kwargs) -> dt.datetime:
+def parse(
+    dt_str: str, 
+    /, 
+    parserinfo: Optional[dateutil.parser.parserinfo]=None, 
+    **kwargs
+) -> dt.datetime:
     return dateutil.parser.parse(
-        date_str, 
+        dt_str, 
         parserinfo=parserinfo, 
         **kwargs
     )
@@ -58,9 +65,6 @@ def resolve(d: DateValue, /, strict: bool=False):
             raise RuntimeError(LogMsg.err(e, d=str(d), strict=strict))
         return None
     
-
-
-
 class From():
     @staticmethod
     def date(v: dt.date, /, hour: int=0, minute: int=0, second: int=0, microsecond: int=0):
@@ -73,8 +77,15 @@ class From():
         )
 
     @staticmethod
-    def string(v: str, fmt: str, /, year: Optional[int]=None, month: Optional[int]=None, day: Optional[int]=None):
-        _dt = dt.datetime.strptime(v, fmt)
+    def string(
+        v: str, 
+        /, 
+        fmt: str | None=None, 
+        year: Optional[int]=None, 
+        month: Optional[int]=None, 
+        day: Optional[int]=None
+    ):
+        _dt = strptime(v, fmt)
         return (
             dt.datetime(
                 year=year or _dt.year,
@@ -86,6 +97,7 @@ class From():
                 microsecond=_dt.microsecond
             )
         )
+        
 
 
     @staticmethod
@@ -123,3 +135,5 @@ def isostamp(
         s = s.replace(':', part_sep)
         # TODO: define a set of incompatible chars and replace with empty space
     return s if include_time else s.split(datetime_sep)[0]
+
+__all__ = export(From, To, isostamp, resolve, strptime, strftime, now)

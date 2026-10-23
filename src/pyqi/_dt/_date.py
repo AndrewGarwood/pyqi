@@ -8,11 +8,11 @@ from collections.abc import Collection
 import calendar
 import datetime as dt
 from dateutil.relativedelta import relativedelta
-from typing import (Literal, Callable, Optional, TypedDict, NotRequired, overload)
-from dataclasses import dataclass
+from typing import (Literal, Callable, overload)
 from zoneinfo import ZoneInfo
 from dateutil import parser
-from .constants import Weekday, DateValue
+from .constants import Weekday
+from .types import DateValue, ComputeDateOptions
 from lute import LogMsg
 from .. import _array as Array
 
@@ -22,18 +22,18 @@ def _default_get_date_str(s: str, /) -> str: return s[:10]
 
 def strftime(d: dt.date, fmt: str, /) -> str: return d.strftime(fmt)
 
-def strptime(s: str, fmt: Optional[str]=None, /) -> dt.date:
+def strptime(s: str, fmt: str | None=None, /) -> dt.date:
     return dt.datetime.strptime(s, fmt).date() if fmt else parse(s)
 
 def today() -> dt.date: return dt.date.today()
 
 @overload
-def resolve(d: DateValue, /) -> Optional[dt.date]: ...
+def resolve(d: DateValue, /) -> dt.date | None: ...
 
 @overload
 def resolve(d: DateValue, /, strict: Literal[True]) -> dt.date: ...
 
-def resolve(d: DateValue, /, strict: bool=False): # , default: Optional[dt.date]=None
+def resolve(d: DateValue, /, strict: bool=False): # , default: dt.date | None=None
     """
     *`@returns`*
     - `parse(d) if isinstance(d, str)`
@@ -72,7 +72,7 @@ def strict_resolve_date(d: DateValue, /) -> dt.date:
         raise ValueError(LogMsg(f"Unable to resolve value '{d}' to date object"))
     return result
 
-def parse(date_str: str, /, parserinfo: Optional[parser.parserinfo]=None, **kwargs) -> dt.date:
+def parse(date_str: str, /, parserinfo: parser.parserinfo | None=None, **kwargs) -> dt.date:
     try:
         return parser.parse(date_str, parserinfo=parserinfo, **kwargs)
     except Exception as e:
@@ -92,11 +92,11 @@ class From():
     @staticmethod
     def string(
         s: str, 
-        fmt: Optional[str]=None, 
+        fmt: str | None=None, 
         /, 
-        year: Optional[int]=None, 
-        month: Optional[int]=None, 
-        day: Optional[int]=None
+        year: int | None=None, 
+        month: int | None=None, 
+        day: int | None=None
     ) -> dt.date:
         _date = (
             parse(s) if fmt is None 
@@ -139,11 +139,11 @@ class To():
     def datetime(
         d: dt.date, 
         /, 
-        hour: Optional[int]=None, 
-        minute: Optional[int]=None, 
-        second: Optional[int]=None, 
-        microsecond: Optional[int]=None, 
-        tzinfo: Optional[ZoneInfo]=None
+        hour: int | None=None, 
+        minute: int | None=None, 
+        second: int | None=None, 
+        microsecond: int | None=None, 
+        tzinfo: ZoneInfo | None=None
     ):
         return dt.datetime(
             d.year, 
@@ -163,9 +163,9 @@ class To():
 
 # TODO: make default set of holidays read in from file...
 def offset_business_day(
-    ref: Optional[DateValue] = None,
+    ref: DateValue | None = None,
     days: int = 1,
-    holidays: Optional[Collection[DateValue]] = None,
+    holidays: Collection[DateValue] | None = None,
 ) -> dt.date:
     """
     Offset `ref` by a signed number of business days.
@@ -245,8 +245,8 @@ def offset_business_day(
 
 
 def previous_business_day(
-    ref: Optional[DateValue] = None,
-    holidays: Optional[Collection[DateValue]] = None,
+    ref: DateValue | None = None,
+    holidays: Collection[DateValue] | None = None,
 ) -> dt.date:
     """
     Return the business day immediately preceding `ref`
@@ -277,8 +277,8 @@ def previous_business_day(
 
 
 def next_business_day(
-    ref: Optional[DateValue] = None,
-    holidays: Optional[Collection[DateValue]] = None,
+    ref: DateValue | None = None,
+    holidays: Collection[DateValue] | None = None,
 ) -> dt.date:
     return offset_business_day(ref, days=1, holidays=holidays)
 
@@ -291,54 +291,31 @@ def last_day_of_month(year: int, month: int) -> dt.date:
     return next_month - dt.timedelta(days=1)
 
 
-class ComputeDateDict(TypedDict, total=False):
-    anchor: NotRequired[str]
-    year_offset: NotRequired[int]
-    month_offset: NotRequired[int]
-    day_offset: NotRequired[int]
-    year: NotRequired[int]
-    month: NotRequired[int | str]
-    day: NotRequired[int | Literal["first", "last"]]
+@overload
+def compute_date(options: ComputeDateOptions) -> dt.date: ...
 
-
-@dataclass
-class ComputeDateOptions():
-    anchor: dt.date | None = None
-    year_offset: int = 0
-    month_offset: int = 0
-    day_offset: int = 0
-    year: Optional[int]=None
-    month: int | str | None = None
-    day: int | Literal["first", "last"] | None = None
-
-    @classmethod
-    def from_dict(cls, data: ComputeDateDict, /) -> ComputeDateOptions:
-        try:
-            return cls(
-                anchor=parse(data["anchor"]) if "anchor" in data else None,
-                year_offset=data.get("year_offset", 0),
-                month_offset=data.get("month_offset", 0),
-                day_offset=data.get("day_offset", 0),
-                year=data.get("year"),
-                month=data.get("month"),
-                day=data.get("day"),
-            )
-        except Exception as e:
-            raise Exception(LogMsg.err(e,
-                received=str(data)
-            )) from e
-
-
+@overload
 def compute_date(
     *,
-    anchor: Optional[DateValue] = None,
+    anchor: DateValue | None = None,
     year_offset: int = 0,
     month_offset: int = 0,
     day_offset: int = 0,
-    year: Optional[int]=None,
+    year: int | None=None,
     month: int | str | None = None,
     day: int | Literal["first", "last"] | None = None,
-    options: Optional[ComputeDateOptions]=None
+) -> dt.date: ...
+
+def compute_date(
+    options: ComputeDateOptions | None=None,
+    *,
+    anchor: DateValue | None = None,
+    year_offset: int = 0,
+    month_offset: int = 0,
+    day_offset: int = 0,
+    year: int | None=None,
+    month: int | str | None = None,
+    day: int | Literal["first", "last"] | None = None,
 ) -> dt.date:
     """
     Generic date computation.
@@ -393,7 +370,7 @@ def compute_date(
 
 
 def previous_weekday(
-    ref: Optional[DateValue],
+    ref: DateValue | None,
     weekday: Weekday,
     allow_same_day: bool = True,
     ) -> dt.date:
@@ -419,7 +396,7 @@ def previous_weekday(
 
 
 def next_weekday(
-    ref: Optional[DateValue],
+    ref: DateValue | None,
     weekday: Weekday,
     allow_same_day: bool = True,
 ) -> dt.date:
