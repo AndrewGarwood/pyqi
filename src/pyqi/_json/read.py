@@ -14,6 +14,7 @@ from .types import (
     JsonArray
 )
 T = TypeVar('T', bound=JsonScalar)
+
 StrPath: TypeAlias = str | Path
 def file(path: StrPath, /, **kwargs) -> JsonValue:
     try:
