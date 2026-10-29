@@ -1,19 +1,20 @@
 """
 *`@file`* `fs/_search.py`
-"""
+""" 
 import os
 from pathlib import Path
 from typing import (Optional, Callable)
 from lute import LogMsg
 from .types import (StrPath, TargetExt)
-from ._path import (to_path, has_target_ext, normalize_ext_input, lname)
+from ._path import (to_path, has_target_ext, normalize_ext_input)
 from .. import (_array as Array, _dt as dt)
+from ..utils.module import export
 
 def get_directory_files(
     dir: StrPath, 
-    target_ext: Optional[TargetExt]=None, 
+    target_ext: TargetExt | None=None, 
     recursive: bool=False, 
-    filter_fn: Optional[Callable[[str], bool]]=None
+    filter_fn: Callable[[str], bool] | None=None
 ) -> list[Path]: # , exclude_dirs: list[str]=['.archive']
     target_files: list[Path] = []
     dir = to_path(dir)
@@ -38,9 +39,9 @@ def get_directory_files(
 def find_file(
     parent: StrPath, 
     /,
-    target_ext: Optional[TargetExt]=None, 
+    target_ext: TargetExt | None=None, 
     recursive: bool=False, 
-    filter_fn: Optional[Callable[[str], bool]]=None,
+    filter_fn: Callable[[str], bool] | None=None,
     require_unique: bool=True
 ) -> Path:
     try:
@@ -64,7 +65,7 @@ def find_file(
 def find_dir(
     parent: StrPath,  
     recursive: bool=False,
-    filter_fn: Optional[Callable[[str], bool]]=None,
+    filter_fn: Callable[[str], bool] | None=None,
 ) -> list[Path]:
     parent = to_path(parent)
     walk = list(os.walk(parent))
@@ -76,47 +77,57 @@ def find_dir(
         target_dirs.extend([Path(root).joinpath(d) for d in filtered])
     return target_dirs
 
-
-def remove_from_dir(
-    dir: StrPath,
+def get_child_directories(
+    parent: StrPath,
     /,
-    target_ext: Optional[TargetExt]=None,
-    recursive: bool=False, 
-    filter_fn: Optional[Callable[[str], bool]]=None
+    filter_fn: Callable[[str], bool] | None=None,
 ) -> list[Path]:
-    removed: list[Path] = []
-    try:
-        target_files = get_directory_files(
-            dir, 
-            target_ext, 
-            recursive, 
-            filter_fn
-        )
-        for f in target_files:
-            f.unlink()
-            removed.append(f)
-        return removed
-    except Exception as e:
-        raise Exception(LogMsg.err(
-            error=e,
-            dir=dir,
-            target_ext=target_ext,
-        )) from e
+    """
+    *`@note`* only gets direct descendant of parent for now. i.e. no grandchildren
+    """
+    parent = to_path(parent)
+    target_dirs: list[str] = []
+    walk = tuple(os.walk(parent))
+    walk_limit = 1 # min(1, len(walk)) if not recursive else len(walk)
+    for i in range(walk_limit):
+        (_, dirs, _) = walk[i]
+        _target_dirs = dirs
+        if filter_fn:
+            _target_dirs = Array.filter(dirs, filter_fn)
+        target_dirs.extend(_target_dirs)
+    return Array.map(target_dirs, lambda x: parent.joinpath(x))
 
 
+#TODO: maybe try rm fmt as param of the timesorted functions and use dateutil parse instead
+# or require/assume that filter_fn handles narrowing to dated paths 
 
 def get_most_recent_dir(
     parent: StrPath,
     /,
     fmt: str,
     get_date_str: Callable[[str], str]=lambda x: x[:10],
-    recursive: bool=False,
-    filter_fn: Optional[Callable[[str], bool]]=None,
+    filter_fn: Callable[[str], bool] | None=None,
 ) -> Path:
+    return get_timesorted_directories(
+        parent, 
+        fmt=fmt, 
+        get_date_str=get_date_str, 
+        filter_fn=filter_fn, 
+        descending=True
+    )[0]
+
+def get_timesorted_directories(
+    parent: StrPath,
+    /,
+    fmt: str,
+    get_date_str: Callable[[str], str]=lambda x: x[:10],
+    filter_fn: Callable[[str], bool] | None=None,
+    descending: bool=True,
+) -> list[Path]:
     parent = to_path(parent)
     target_dirs: list[str] = []
     walk = list(os.walk(parent))
-    walk_limit = min(1, len(walk)) if not recursive else len(walk)
+    walk_limit = 1
     for i in range(walk_limit):
         (root, dirs, _) = walk[i]
         before_filter_len = len(target_dirs)
@@ -133,14 +144,15 @@ def get_most_recent_dir(
             ))
         target_dirs.sort(
             key=get_date_str,
-            reverse=True
+            reverse=descending
         )
     if not target_dirs:
         raise FileNotFoundError(LogMsg(
-            f"No valid dir found in {lname(parent)}.",
-            f"{os.listdir(parent)=}"
+            f"No valid directories found under parent.",
+            parent=str(parent),
+            parent_contents=f"{os.listdir(parent)=}"
         ))
-    return parent.joinpath(target_dirs[0])
+    return Array.map(target_dirs, lambda x: parent.joinpath(x))
 
 def get_timesorted_files(
     parent: StrPath,
@@ -149,7 +161,7 @@ def get_timesorted_files(
     get_date_str: Optional[Callable[[str], str]]=None,
     target_ext: TargetExt | None=None,
     descending: bool=True,
-    filter_fn: Optional[Callable[[str], bool]]=None
+    filter_fn: Callable[[str], bool] | None=None
 ) -> list[Path]:
     target_files = get_directory_files(
         parent, 
@@ -182,8 +194,8 @@ def get_most_recent_file(
     parent: StrPath,
     fmt: str,
     get_date_str: Optional[Callable[[str], str]]=None,
-    target_ext: Optional[TargetExt]=None,
-    filter_fn: Optional[Callable[[str], bool]]=None
+    target_ext: TargetExt | None=None,
+    filter_fn: Callable[[str], bool] | None=None
 ) -> Path:
     """ 
     uses date in filename, not file's stat 
@@ -204,3 +216,12 @@ def get_most_recent_file(
         ))
     return target_files[0]
 
+__all__ = export(
+    get_directory_files, 
+    find_file, 
+    find_dir, 
+    get_child_directories, 
+    get_timesorted_directories, 
+    get_timesorted_files, 
+    get_most_recent_file
+)

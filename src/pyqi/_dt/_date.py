@@ -54,23 +54,23 @@ def resolve(d: DateValue, /, strict: bool=False): # , default: dt.date | None=No
             ))
     return result
 
-def strict_resolve_date(d: DateValue, /) -> dt.date:
-    """
-    *`@returns`*
-    - `parse(d) if isinstance(d, str)`
-    - `d.date() if isinstance(d, dt.datetime)`
-    - `d if isinstance(d, dt.date)`
-    - `else raise ValueError`
-    """
-    result = (
-        parse(d) if isinstance(d, str)
-        else d.date() if isinstance(d, dt.datetime)
-        else d if isinstance(d, dt.date)
-        else None
-    )
-    if result is None:
-        raise ValueError(LogMsg(f"Unable to resolve value '{d}' to date object"))
-    return result
+# def strict_resolve_date(d: DateValue, /) -> dt.date:
+#     """
+#     *`@returns`*
+#     - `parse(d) if isinstance(d, str)`
+#     - `d.date() if isinstance(d, dt.datetime)`
+#     - `d if isinstance(d, dt.date)`
+#     - `else raise ValueError`
+#     """
+#     result = (
+#         parse(d) if isinstance(d, str)
+#         else d.date() if isinstance(d, dt.datetime)
+#         else d if isinstance(d, dt.date)
+#         else None
+#     )
+#     if result is None:
+#         raise ValueError(LogMsg(f"Unable to resolve value '{d}' to date object"))
+#     return result
 
 def parse(date_str: str, /, parserinfo: parser.parserinfo | None=None, **kwargs) -> dt.date:
     try:

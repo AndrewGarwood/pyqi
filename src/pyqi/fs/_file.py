@@ -2,7 +2,6 @@
 *`@file`* `fs/_file.py`
 """
 import time, shutil, tempfile
-from typing import Optional
 from pathlib import Path
 from datetime import datetime
 from lute import get_logger
@@ -83,7 +82,7 @@ def make_temp_file(src: StrPath, dst: StrPath, stem_suffix: str=".tmp") -> Path:
         shutil.copy2(src, tmppath)
         return tmppath
     except Exception as e:
-        raise Exception(LogMsg.err(
+        raise RuntimeError(LogMsg.err(
             error=e,
             original=str(src),
             oudir=str(dst),
@@ -92,7 +91,7 @@ def make_temp_file(src: StrPath, dst: StrPath, stem_suffix: str=".tmp") -> Path:
 
 def copy_file(
     src: StrPath, 
-    dst: Optional[StrPath]=None,
+    dst: StrPath | None=None,
     /,
     overwrite: bool=False
 ) -> Path:
@@ -119,8 +118,11 @@ def copy_file(
         shutil.copy2(src=src, dst=dst)
         return dst
     except Exception as e:
-        raise Exception(LogMsg.err(
-            error=e, original=src, outpath=dst, overwrite=overwrite
+        raise RuntimeError(LogMsg.err(
+            e, 
+            original=src, 
+            outpath=dst, 
+            overwrite=overwrite
         )) from e
 
 def stage_file(
@@ -156,7 +158,7 @@ def publish_staged_file(
     /, 
     *dst: StrPath,
     backup_existing: bool=True,
-    backup_dir: Optional[StrPath]=None
+    backup_dir: StrPath | None=None
 ) -> list[Path]:
     published: list[Path] = []
     try:

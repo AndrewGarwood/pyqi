@@ -1,14 +1,13 @@
 """
 *`@file`* `fs/_rename.py`
 """
-from enum import auto
 from pathlib import Path
 from ._path import (to_path)
 from .types import (StrPath, TargetExt, RenameOperation)
 from ._search import (get_directory_files)
 from lute import LogMsg
 from typing import (Optional, Callable, Sequence, Mapping)
-from .. import (_string as String, _array as Array)
+from .. import (_array as Array)
 
 
 
