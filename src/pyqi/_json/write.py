@@ -3,9 +3,8 @@
 """
 import json
 from pathlib import (Path)
-from typing import Optional, TypeAlias, Any
+from typing import TypeAlias, Any
 from lute import (LogMsg, annotate)
-from .types import (JsonValue)
 
 
 StrPath: TypeAlias = str | Path
@@ -13,7 +12,7 @@ def file(
     data: Any, 
     path: StrPath, 
     /,
-    indent: Optional[int]=4, 
+    indent: int=4, 
     **kwargs
 ) -> Path:
     try:
@@ -30,7 +29,7 @@ def file(
             kwargs=str(kwargs)
         )) from e
 
-def dumpstr(data: JsonValue, /, indent: Optional[int]=4, **kwargs):
+def dumpstr(data: Any, /, indent: int=4, **kwargs):
     try:
         return json.dumps(data, indent=indent, **kwargs)
     except Exception as e:

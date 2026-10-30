@@ -3,11 +3,10 @@
 """
 
 from __future__ import annotations
-from datetime import datetime
-from dataclasses import dataclass
 from typing import (Generic, Optional, TypeVar, Any)
 from lute import LogMsg
 from ..utils import (export, HasDunderName, safe)
+from json import dumps
 
 T = TypeVar("T")
 
@@ -83,6 +82,9 @@ class Result(Generic[T]):
             "notes": self.notes,
             "kwargs": self.kwargs
         }
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}<T>" + dumps(self.to_dict(), indent=4)
     
     @classmethod
     def ok(cls, 

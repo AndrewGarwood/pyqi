@@ -108,7 +108,7 @@ class From():
             day=day or _date.day
         )
     @staticmethod
-    def pathstem(s: str | Path, fmt: str, /, get_date_part: Callable[[str], str]=_default_get_date_str):
+    def pathstem(s: str | Path, fmt: str | None=None, /, get_date_part: Callable[[str], str]=_default_get_date_str):
         original_value = s
         if isinstance(s, Path):
             path_parts = s.parts

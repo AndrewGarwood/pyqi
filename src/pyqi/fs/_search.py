@@ -3,8 +3,8 @@
 """ 
 import os
 from pathlib import Path
-from typing import (Optional, Callable)
-from lute import LogMsg
+from typing import (Callable)
+from lute import LogMsg, annotate
 from .types import (StrPath, TargetExt)
 from ._path import (to_path, has_target_ext, normalize_ext_input)
 from .. import (_array as Array, _dt as dt)
@@ -157,43 +157,48 @@ def get_timesorted_directories(
 def get_timesorted_files(
     parent: StrPath,
     /,
-    fmt: str,
-    get_date_str: Optional[Callable[[str], str]]=None,
+    get_date_str: Callable[[str], str] | None=None,
     target_ext: TargetExt | None=None,
     descending: bool=True,
     filter_fn: Callable[[str], bool] | None=None
 ) -> list[Path]:
+    target_ext = normalize_ext_input(target_ext) if target_ext else []
     target_files = get_directory_files(
         parent, 
         target_ext, 
         False, 
         filter_fn
     )
-    target_ext = normalize_ext_input(target_ext) if target_ext else []
-    if not target_files:
-        raise RuntimeError(LogMsg(
-            f"No target files found under {parent=}",
-            used_filter=bool(filter_fn),
-            target_ext=str(target_ext)
-        ))
     get_date_str = (
         (lambda s: s.split("_", 1)[0]) if get_date_str is None 
         else get_date_str
     )
-    target_files.sort(
-        key=lambda p: dt.datetime_from.string(
-            get_date_str.__call__(p.stem), 
-            fmt
-        ),
+    dated_files: list[tuple[Path, dt.date]] = []
+    for f in target_files:
+        try:
+            _d = dt.date_from.pathstem(f.stem, get_date_part=get_date_str)
+            dated_files.append((f, _d))
+        except Exception:
+            pass
+    if not dated_files:
+        raise RuntimeError(LogMsg(
+            f"No dated files found under {parent=}",
+            filter_fn=annotate(filter_fn),
+            target_ext=str(target_ext),
+            target_files=str(target_files),
+            dated_files=str(dated_files)
+        ))
+
+    dated_files.sort(
+        key=lambda tup: tup[1],
         reverse=descending
     )
-    return target_files
+    return Array.map(dated_files, lambda tup: tup[0])
 
 
 def get_most_recent_file(
     parent: StrPath,
-    fmt: str,
-    get_date_str: Optional[Callable[[str], str]]=None,
+    get_date_str: Callable[[str], str] | None=None,
     target_ext: TargetExt | None=None,
     filter_fn: Callable[[str], bool] | None=None
 ) -> Path:
@@ -202,7 +207,6 @@ def get_most_recent_file(
     """
     target_files = get_timesorted_files(
         parent, 
-        fmt, 
         get_date_str, 
         target_ext, 
         True, 
