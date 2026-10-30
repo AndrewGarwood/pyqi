@@ -104,13 +104,11 @@ def get_child_directories(
 def get_most_recent_dir(
     parent: StrPath,
     /,
-    fmt: str,
     get_date_str: Callable[[str], str]=lambda x: x[:10],
     filter_fn: Callable[[str], bool] | None=None,
 ) -> Path:
     return get_timesorted_directories(
         parent, 
-        fmt=fmt, 
         get_date_str=get_date_str, 
         filter_fn=filter_fn, 
         descending=True
@@ -119,40 +117,32 @@ def get_most_recent_dir(
 def get_timesorted_directories(
     parent: StrPath,
     /,
-    fmt: str,
     get_date_str: Callable[[str], str]=lambda x: x[:10],
     filter_fn: Callable[[str], bool] | None=None,
     descending: bool=True,
 ) -> list[Path]:
     parent = to_path(parent)
-    target_dirs: list[str] = []
+    dated_dirs: list[tuple[Path, dt.date]] = []
     walk = list(os.walk(parent))
     walk_limit = 1
     for i in range(walk_limit):
         (root, dirs, _) = walk[i]
-        before_filter_len = len(target_dirs)
-        if filter_fn:
-            target_dirs = Array.filter(dirs, filter_fn)
-        else: # default filter
-            target_dirs = Array.filter(dirs, lambda x: dt.matches_format(get_date_str(x), fmt))
-        if not target_dirs:
-            raise RuntimeError(LogMsg(
-                f"No directories found under {parent=}",
-                before_filter_len=before_filter_len,
-                walk_root=root,
-                available_dirs=str(dirs)
-            ))
-        target_dirs.sort(
-            key=get_date_str,
-            reverse=descending
-        )
-    if not target_dirs:
-        raise FileNotFoundError(LogMsg(
-            f"No valid directories found under parent.",
-            parent=str(parent),
-            parent_contents=f"{os.listdir(parent)=}"
+        for d in dirs:
+            if filter_fn and not filter_fn(d): continue
+            try:
+                dated_dirs.append((
+                    parent.joinpath(d), 
+                    dt.date_from.pathstem(d, get_date_part=get_date_str)
+                ))
+            except Exception: pass
+    if not dated_dirs:
+        raise RuntimeError(LogMsg(
+            "No dated dirs found under parent", 
+            parent=str(parent)
         ))
-    return Array.map(target_dirs, lambda x: parent.joinpath(x))
+    dated_dirs.sort(key=lambda tup: tup[1], reverse=descending)
+    return Array.map(dated_dirs, lambda tup: tup[0])
+
 
 def get_timesorted_files(
     parent: StrPath,
