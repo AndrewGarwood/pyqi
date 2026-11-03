@@ -31,9 +31,8 @@ class Filter(Json.Serial[FilterDict]):
     ```
     field: str
     operator: Operator
-    value: list[VT]
-    negate: bool = False 
-    # maybe useful if want to indicate that should take inverse of statement 
+    value: Any
+    negate: bool = False # maybe useful if want to indicate that should take inverse of statement 
     # (assuming don't want to use the corresponding operator or it doesn't exist)
     # e.g. building pl.Expr, expr = (expr.not_() if f.negate else expr)
     ```

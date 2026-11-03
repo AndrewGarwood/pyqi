@@ -210,6 +210,35 @@ def get_most_recent_file(
         ))
     return target_files[0]
 
+
+def remove_from_dir(
+    dir: StrPath,
+    /,
+    target_ext: TargetExt | None=None,
+    recursive: bool=False, 
+    filter_fn: Callable[[str], bool] | None=None
+) -> list[Path]:
+    removed: list[Path] = []
+    try:
+        target_files = get_directory_files(
+            dir, 
+            target_ext, 
+            recursive, 
+            filter_fn
+        )
+        for f in target_files:
+            f.unlink()
+            removed.append(f)
+        return removed
+    except Exception as e:
+        raise RuntimeError(LogMsg.err(
+            error=e,
+            dir=dir,
+            target_ext=target_ext,
+        )) from e
+
+
+
 __all__ = export(
     get_directory_files, 
     find_file, 
@@ -217,5 +246,6 @@ __all__ = export(
     get_child_directories, 
     get_timesorted_directories, 
     get_timesorted_files, 
-    get_most_recent_file
+    get_most_recent_file,
+    remove_from_dir
 )

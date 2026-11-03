@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field as _field
 from .._enum import BaseStrEnum
 from typing import (Any, Self, TypedDict, TypeGuard, Mapping)
-from lute import LogMsg, bad_arg
+from lute import LogMsg
 from ... import _json as Json
 from ...utils import export
 
@@ -13,6 +13,12 @@ from ._filter import (FilterDict, Filter, is_filter_dict)
 
 
 class LogicalOperator(BaseStrEnum):
+    """
+    ```
+    AND = "AND"
+    OR = "OR"
+    ```
+    """
     AND = "AND"
     OR = "OR"
 
@@ -37,8 +43,9 @@ class FilterGroup(Json.Serial[FilterGroupDict]):
     @classmethod
     def from_dict(cls, data: FilterGroupDict | dict[str, Any], /,) -> Self:
         try:
+            operator = LogicalOperator.resolve(data.get('operator', 'AND'))
             filters: list[Filter | FilterGroup] = []
-            for i, item in enumerate(data['filters']):
+            for i, item in enumerate(data.get('filters', [])):
                 if (is_filter_dict(item)):
                     filters.append(Filter.from_dict(item))
                 elif (is_filter_group_dict(item)):
@@ -46,11 +53,12 @@ class FilterGroup(Json.Serial[FilterGroupDict]):
                 else:
                     raise ValueError(LogMsg.bad_arg(
                         item, 
-                        f"FilterGroupDict['filters'][{i}]",
-                        "Invalid filter value", FilterDict, FilterGroupDict
+                        f"FilterGroupDict[filters][{i}]",
+                        "Invalid array element", 
+                        FilterDict, FilterGroupDict
                     ))
             return cls(
-                operator=LogicalOperator.resolve(data['operator']),
+                operator=operator,
                 filters=filters
             )
         except Exception as e:
