@@ -1,14 +1,15 @@
 """
-*`@file`* `_string/operator`
+*`@file`* `_string/condition`
 """
-
 from __future__ import annotations
+from dataclasses import dataclass
+from typing import (Any, Self, TypedDict, Required)
+from lute import LogMsg
+from .._json import Serial
 from ..models._enum import BaseStrEnum
-from ._input import (StrInput, resolve_str_input)
 from ..models._registry import Registry
+from ._input import (StrInput, resolve_str_input)
 import re
-
-
 
 class StringCondition(BaseStrEnum):
     """ aka `StringPredicate` """
@@ -21,10 +22,19 @@ class StringCondition(BaseStrEnum):
 STRING_CONDITION_REGISTRY: Registry[
     StringCondition, 
     bool
-] = Registry(StringCondition, StringCondition.resolve)
+] = Registry(
+    StringCondition, 
+    StringCondition.resolve
+)
 
 @STRING_CONDITION_REGISTRY.register(StringCondition.CONTAINS)
-def _contains(s: str,  /, target: StrInput, ignore_case: bool=True, require_all: bool=False) -> bool:
+def _contains(
+    s: str, 
+    /, 
+    target: StrInput, 
+    ignore_case: bool=True, 
+    require_all: bool=False,
+) -> bool:
     target = resolve_str_input(target)
     if ignore_case:
         s = s.casefold()
@@ -36,7 +46,7 @@ def _contains(s: str,  /, target: StrInput, ignore_case: bool=True, require_all:
     )
 
 @STRING_CONDITION_REGISTRY.register(StringCondition.EQUALS)
-def _equals(s: str,  /, target: StrInput, ignore_case: bool=True) -> bool:
+def _equals(s: str,  /, target: StrInput, ignore_case: bool=True, *args, **kwargs) -> bool:
     target = resolve_str_input(target)
     if ignore_case:
         s = s.casefold()
@@ -45,7 +55,7 @@ def _equals(s: str,  /, target: StrInput, ignore_case: bool=True) -> bool:
 
 
 @STRING_CONDITION_REGISTRY.register(StringCondition.ENDS_WITH)
-def _endswith(s: str, /, target: StrInput, ignore_case: bool=True) -> bool:
+def _endswith(s: str, /, target: StrInput, ignore_case: bool=True, *args, **kwargs) -> bool:
     target = resolve_str_input(target)
     if ignore_case:
         s = s.casefold()
@@ -54,7 +64,7 @@ def _endswith(s: str, /, target: StrInput, ignore_case: bool=True) -> bool:
 
 
 @STRING_CONDITION_REGISTRY.register(StringCondition.STARTS_WITH)
-def _startswith(s: str, /, target: StrInput, ignore_case: bool=True) -> bool:
+def _startswith(s: str, /, target: StrInput, ignore_case: bool=True, *args, **kwargs) -> bool:
     target = resolve_str_input(target)
     if ignore_case:
         s = s.casefold()
@@ -63,12 +73,48 @@ def _startswith(s: str, /, target: StrInput, ignore_case: bool=True) -> bool:
 
 
 @STRING_CONDITION_REGISTRY.register(StringCondition.MATCHES)
-def _matches(s: str, /, target: str | re.Pattern[str]) -> bool:
+def _matches(s: str, /, target: str | re.Pattern[str], *args, **kwargs) -> bool:
     pat = (
         target if isinstance(target, re.Pattern) 
         else re.compile(target) # re.compile(rf"(?<=.){target}(?=.)")
     )
     return bool(re.match(pat, s)) # pat.search(s)
+
+
+class StringConditionOptionsDict(TypedDict, total=False):
+    condition: Required[str | StringCondition]
+    target: Required[StrInput]
+    ignore_case: bool
+    require_all: bool
+
+@dataclass
+class StringConditionOptions(Serial[StringConditionOptionsDict]):
+    condition: StringCondition
+    target: StrInput
+    ignore_case: bool = True
+    require_all: bool = False
+
+    @classmethod
+    def from_dict(cls, data: StringConditionOptionsDict | dict[str, Any]) -> Self:
+        try:
+            return cls(
+                condition=StringCondition.resolve(data["condition"]),
+                target=data['target'],
+                ignore_case=data.get('ignore_case', True),
+                require_all=data.get('require_all', False)
+            )
+        except Exception as e:
+            raise RuntimeError(LogMsg.err(
+                e,
+                expected=StringConditionOptionsDict.__name__,
+                received=str(data)
+            )) from e
+
+    @property
+    def case_sensitive(self) -> bool:
+        return not self.ignore_case
+
+
 
 
 # =============================================================================
@@ -91,5 +137,6 @@ def matches(s: str, target: str | re.Pattern[str]) -> bool:
 
 __all__ = [
     "STRING_CONDITION_REGISTRY", 
-    "contains", "equals", "endswith", "startswith", "matches"
+    "contains", "equals", "endswith", "startswith", "matches", 
+    "StringConditionOptions", "StringConditionOptionsDict"
 ]

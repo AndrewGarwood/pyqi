@@ -24,6 +24,21 @@ class Weekday(BaseIntEnum):
 
 
 MONTH_NAMES = list(calendar.month_name[1:])
+"""
+` = ['January', 'February', 'March', 'April', 'May', 
+'June', 'July', 'August', 'September', 'October', 'November', 'December'
+]`
+- `"%B"`
+"""
+
+MONTH_ABBREVS = list(calendar.month_abbr[1:])
+"""
+`= [
+'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 
+'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+]`
+- `"%b"`
+"""
 
 
 EXCEL_EPOCH = dt.datetime(1899, 12, 30)

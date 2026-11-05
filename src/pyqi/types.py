@@ -2,8 +2,12 @@
 *`@file`* `pyqi/types`
 """
 from enum import (StrEnum, IntEnum)
-from typing import (Iterable, TypeAlias, TypeGuard, Any, TypeVar, Protocol, runtime_checkable)
+from typing import (
+    Iterable, TypeAlias, TypeGuard, Any, TypeVar, 
+    Protocol, runtime_checkable
+)
 from .utils import export
+
 T = TypeVar('T')
 T_CNTRV = TypeVar("T_CNTRV", contravariant=True)
 StrEnumT = TypeVar("StrEnumT", bound=StrEnum)

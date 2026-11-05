@@ -1,4 +1,6 @@
-
+"""
+*`@file`* `_string/_input`
+"""
 from __future__ import annotations
 from typing import (Sequence, TypeAlias)
 from lute import LogMsg
@@ -29,3 +31,5 @@ def resolve_str_input(s: StrInput, /, require_non_empty: bool=True) -> tuple[str
             require_non_empty=require_non_empty
         ))
     return result
+
+__all__ = ["StrInput", "ResolvedStrInput", "resolve_str_input"]

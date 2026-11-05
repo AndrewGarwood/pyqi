@@ -7,7 +7,7 @@ from lute import LogMsg
 from typing import (Literal)
 from .. import (_array as Array)
 from ..models._enum import BaseStrEnum
-from .._string.operator import contains
+from .._string._condition import contains
 
 class FormatCode(BaseStrEnum):
     MONTH_NAME = "%B"

@@ -3,7 +3,7 @@
 """ 
 import os
 from pathlib import Path
-from typing import (Callable)
+from typing import (Callable, Literal, overload)
 from lute import LogMsg, annotate
 from .types import (StrPath, TargetExt)
 from ._path import (to_path, has_target_ext, normalize_ext_input)
@@ -36,18 +36,48 @@ def get_directory_files(
         target_files.extend(_to_add)
     return target_files
 
+
+@overload
 def find_file(
     parent: StrPath, 
     /,
     target_ext: TargetExt | None=None, 
     recursive: bool=False, 
     filter_fn: Callable[[str], bool] | None=None,
-    require_unique: bool=True
-) -> Path:
+    *,
+    require_unique: bool=True,
+    _raise_on_missing: Literal[False]
+) -> Path | None: ...
+
+@overload
+def find_file(
+    parent: StrPath, 
+    /,
+    target_ext: TargetExt | None=None, 
+    recursive: bool=False, 
+    filter_fn: Callable[[str], bool] | None=None,
+    *,
+    require_unique: bool=True,
+    _raise_on_missing: Literal[True] = True
+) -> Path: ...
+
+
+def find_file(
+    parent: StrPath, 
+    /,
+    target_ext: TargetExt | None=None, 
+    recursive: bool=False, 
+    filter_fn: Callable[[str], bool] | None=None,
+    *,
+    require_unique: bool = True,
+    _raise_on_missing: bool = True
+):
     try:
         candidates = get_directory_files(parent, target_ext, recursive, filter_fn)
         if not candidates:
-            raise FileNotFoundError(f"Found 0 files that match parameters")
+            if _raise_on_missing:
+                raise FileNotFoundError(f"Found 0 files that match parameters")
+            return None
         if require_unique and len(candidates) > 1:
             raise RuntimeError(
                 f"Found multiple ({len(candidates)}) files & {require_unique=}"
@@ -55,11 +85,11 @@ def find_file(
         return candidates[0]
     except Exception as e:
         raise RuntimeError(LogMsg.err(
-            error=e,
+            e,
             parent=str(parent),
             target_ext=str(target_ext),
             recursive=recursive,
-        ))
+        )) from e
 
 
 def find_dir(

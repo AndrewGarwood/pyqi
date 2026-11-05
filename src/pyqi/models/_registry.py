@@ -137,7 +137,7 @@ class Registry(Generic[K, R]):
         try:
             return function(*args, **kwargs)
         except Exception as e:
-            raise RegistryCallError(LogMsg(
+            raise RegistryCallError(LogMsg.err(e,
                 f"Error calling {normalized_key!r} from {self._name!r};",
                 registered_function=lute.annotate(function),
                 args=str(args),
@@ -172,9 +172,9 @@ class Registry(Generic[K, R]):
         try:
             return self._functions.pop(normalized_key)
         except KeyError as e:
-            raise RegistryKeyError(
+            raise RegistryKeyError(LogMsg.err(e,
                 f"{normalized_key!r} is not registered in {self._name!r}"
-            ) from e
+            )) from e
     
     def __len__(self) -> int: 
         return len(self._functions)
@@ -195,12 +195,31 @@ class TypedRegistry(Generic[K, P, R]):
     Registry for functions that all have the same parameter signature
     and return type.
 
-    Type parameters:
-        `K`: Canonical registry key type.
+    `Type parameters:`
+        `K = TypeVar("K", bound=StrEnum)` Canonical registry key type.
 
-        `P`: Parameter specification shared by every registered function.
+        `P = ParamSpec("P")` Parameter specification shared by every registered function.
 
-        `R`: Return type shared by every registered function.
+        `R = TypeVar("R")` Return type shared by every registered function.
+
+    example:
+    ```
+    EXPORT_METHOD_REGISTRY: TypedRegistry[
+        ExportMethod, 
+        [
+            Session, 
+            ExportOptions, 
+            NativeSaveDialogOptions 
+                | Callable[..., NativeSaveDialogOptions] 
+                | None
+        ], 
+        Result[ExportDetails]
+    ] = TypedRegistry(
+        ExportMethod, 
+        normalize_key=ExportMethod.resolve, 
+        name="ExportMethodRegistry"
+    )
+    ```
     """
 
     def __init__(
@@ -229,9 +248,10 @@ class TypedRegistry(Generic[K, P, R]):
         except RegistryKeyError:
             raise
         except (KeyError, TypeError, ValueError) as e:
-            raise RegistryKeyError(
+            raise RegistryKeyError(LogMsg.err(
+                e,
                 f"Invalid key for {self._name}: {key!r}"
-            ) from e
+            )) from e
 
     def register(
         self,

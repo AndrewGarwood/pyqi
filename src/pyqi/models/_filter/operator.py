@@ -53,7 +53,9 @@ class Operator(BaseStrEnum):
     IS_LESS_THAN_OR_EQUAL_TO = 'IS_LESS_THAN_OR_EQUAL_TO'
     IS_LESS_THAN = 'IS_LESS_THAN'
     CONTAINS = 'CONTAINS'
+    """ use for string/substring """
     DOES_NOT_CONTAIN = 'DOES_NOT_CONTAIN'
+    """ use for string/substring """
     STARTS_WITH = 'STARTS_WITH'
     ENDS_WITH = 'ENDS_WITH'
     IS_NULL = 'IS_NULL'
