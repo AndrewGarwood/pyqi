@@ -15,6 +15,7 @@ from lute import LogMsg
 from .types import (JsonDict, JsonValue, is_json_value)
 from ..types import is_primitive
 from .. import _array as Array
+from ..utils import safe
 from ..utils import export
 
 
@@ -76,7 +77,7 @@ class Serial(ABC, Generic[T]):
         """ 
         *`@returns`* `Array.map(self.keys(), lambda k: (k, getattr(self, k, None)))`
         """
-        return tuple(Array.map(self.keys(), lambda k: (k, getattr(self, k, None))))
+        return tuple(Array.map(self.keys(), lambda k: (k, safe.readattr(self, k))))
 
     @classmethod
     @abstractmethod

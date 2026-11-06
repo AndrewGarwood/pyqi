@@ -67,13 +67,13 @@ def find(
 ):
     matched = [x for x in arr if fn(x)]
     if (strict and not matched):
-        raise RuntimeError(LogMsg(
+        raise ValueError(LogMsg(
             "No values satisfying filter function.",
             iterable_received=annotate(arr),
             fn_received=annotate(fn)
         ))
     if (unique and len(matched) > 1):
-        raise RuntimeError(LogMsg(
+        raise ValueError(LogMsg(
             "Found multiple values satisfying filter function.",
             iterable_received=annotate(arr),
             fn_received=annotate(fn)

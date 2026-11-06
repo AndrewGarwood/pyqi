@@ -44,12 +44,13 @@ class SortOptions(Serial[SortOptionsDict], Generic[K]):
                 by=data['by'],
                 order=data['order']
             )
+        except (ValueError, KeyError): raise
         except Exception as e:
             raise RuntimeError(LogMsg.err(
                 e,
                 received=str(data),
                 expected=SortOptionsDict.__name__ 
-            ))
+            )) from e
 
     def to_dict(self) -> SortOptionsDict | dict[str, Any]:
         return {

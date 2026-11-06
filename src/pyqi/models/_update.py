@@ -43,6 +43,7 @@ class UpdateManifest(Json.Serial[UpdateManifestDict], Generic[T]):
                 message=data.get('message'),
                 error=data.get('error'),
             )
+        except (ValueError, KeyError): raise
         except Exception as e:
             raise RuntimeError(LogMsg.err(error=e)) from e
 
