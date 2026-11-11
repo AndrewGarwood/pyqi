@@ -2,10 +2,11 @@
 *`@file`* `models/_filter/group`
 """
 from __future__ import annotations
-from dataclasses import dataclass, field as _field
+from dataclasses import dataclass, field as _field, replace
 from .._enum import BaseStrEnum
 from typing import (Any, Self, TypedDict, TypeGuard, Mapping)
 from lute import LogMsg
+from copy import deepcopy
 from ... import _json as Json
 from ...utils import export
 
@@ -37,6 +38,14 @@ def is_filter_group_dict(value: Any, /) -> TypeGuard[FilterGroupDict]:
 
 @dataclass
 class FilterGroup(Json.Serial[FilterGroupDict]):
+    """
+    - `dataclass()`
+    - *`@extends`* `Json.Serial[FilterGroupDict]`
+    ```
+    operator: LogicalOperator = LogicalOperator.AND
+    filters: list[Filter | FilterGroup] = _field(default_factory=list)
+    ```
+    """
     operator: LogicalOperator = LogicalOperator.AND
     filters: list[Filter | FilterGroup] = _field(default_factory=list)
 
@@ -62,12 +71,15 @@ class FilterGroup(Json.Serial[FilterGroupDict]):
                 filters=filters
             )
         except Exception as e:
-            raise RuntimeError(LogMsg.err(e, received=Json.serialize(data))) from e
+            raise RuntimeError(LogMsg.err(e,
+                f"Failed to construct {cls.__name__} from dictionary", 
+                received=Json.serialize(data)
+            )) from e
 
     def to_dict(self) -> FilterGroupDict | dict[str, Any]:
         return {
+            "operator": str(self.operator),
             "filters": [(x.to_dict()) for x in self.filters],
-            "operator": str(self.operator)
         }
 
 __all__ = export(LogicalOperator, FilterGroupDict, FilterGroup)

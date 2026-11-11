@@ -1,11 +1,14 @@
 """
 *`@file`* `fs/_dir.py`
 """
-import time, shutil
-from lute import get_logger
-from ._path import *
+import time, shutil, os
+from pathlib import Path
+from pyqi.utils.module import export
+from lute import get_logger, LogMsg
+from ._path import (to_path, is_dir, is_file)
+from .types import (StrPath)
 
-mlog = get_logger(Path(__file__).parent.stem)
+mlog = get_logger(__file__)
 
 def ensure_dir_exists(path: StrPath, /, parents=True, exist_ok=True) -> bool:
     """ 
@@ -60,6 +63,7 @@ def dir_is_writable(
 
 
 def empty_dir(dir: StrPath, /):
+    """ clear dir contents """
     dir = to_path(dir)
     if (not dir.is_dir()): 
         return False
@@ -72,28 +76,11 @@ def empty_dir(dir: StrPath, /):
     return (not os.listdir(dir))
 
 
-def size_of_dir(dir: StrPath, /) -> int:
-    try:
-        dir = to_path(dir)
-        if (not dir.is_dir()): 
-            raise ValueError(f"Provided path is not a directory")
-        return sum(
-            p.stat().st_size
-            for p in dir.rglob("*")
-            if p.is_file()
-        )
-    except Exception as e:
-        raise Exception(LogMsg.err(
-            error=e,
-            dir=str(dir)
-        )) from e
-
-    
 def copy_dir(
     src: StrPath, 
-    dst_parent: Optional[StrPath]=None,
+    dst_parent: StrPath | None=None,
     /,
-    name: Optional[str]=None,
+    name: str | None=None,
     copy_suffix: str = " - Copy({i})"
 ) -> Path:
     src = to_path(src)
@@ -110,3 +97,11 @@ def copy_dir(
             i += 1
     shutil.copytree(src, target)
     return target
+
+
+__all__ = export(
+    ensure_dir_exists, 
+    dir_is_writable, 
+    empty_dir, 
+    copy_dir
+)

@@ -2,16 +2,17 @@
 *`@file`* `fs/_file.py`
 """
 import time, shutil, tempfile
+from datetime import datetime
 from pathlib import Path
 from datetime import datetime
 from lute import get_logger
-from ._dir import (ensure_dir_exists)
 from ._path import (StrPath, to_path, is_file)
 from lute import LogMsg
 from .. import _array as Array
+from pyqi.utils.module import export
 
 
-mlog = get_logger(Path(__file__).parent.stem)
+mlog = get_logger(__file__)
 
 def wait_for_file_unlock(
     path: StrPath,
@@ -33,6 +34,7 @@ def wait_for_file_unlock(
         last_error_str=str(last_error),
         path=str(path)
     )) from last_error
+
 
 def wait_for_file_exists(
     path: StrPath,
@@ -82,8 +84,7 @@ def make_temp_file(src: StrPath, dst: StrPath, stem_suffix: str=".tmp") -> Path:
         shutil.copy2(src, tmppath)
         return tmppath
     except Exception as e:
-        raise RuntimeError(LogMsg.err(
-            error=e,
+        raise RuntimeError(LogMsg.err(e,
             original=str(src),
             oudir=str(dst),
         )) from e
@@ -125,6 +126,7 @@ def copy_file(
             overwrite=overwrite
         )) from e
 
+
 def stage_file(
     src: StrPath, 
     /, 
@@ -140,17 +142,16 @@ def stage_file(
         dst = to_path(dst)
         if dst.is_dir():
             dst = dst.joinpath(f"{src.stem}.staged{src.suffix}")
-        ensure_dir_exists(dst.parent)
+        dst.parent.mkdir(parents=True, exist_ok=True)
         copy_file(src, dst, overwrite=overwrite)
         wait_for_file_unlock(dst)
         return dst
     except Exception as e:
-        raise RuntimeError(LogMsg.err(
-            error=e, 
+        raise RuntimeError(LogMsg.err(e, 
             src=str(src), 
             dst=str(dst), 
             overwrite=overwrite
-        ))
+        )) from e
 
 
 def publish_staged_file(
@@ -158,7 +159,8 @@ def publish_staged_file(
     /, 
     *dst: StrPath,
     backup_existing: bool=True,
-    backup_dir: StrPath | None=None
+    backup_dir: StrPath | None=None,
+    timestamp_fmt: str = '%Y%m%dT%H%M%S'
 ) -> list[Path]:
     published: list[Path] = []
     try:
@@ -170,11 +172,11 @@ def publish_staged_file(
                 wait_for_file_unlock(p)
                 new_parent = Path(backup_dir) if backup_dir else p.parent
                 backup_path = new_parent.joinpath(
-                    f"{p.stem}.backup.{time.strftime('%Y%m%d_%H%M%S')}{p.suffix}"
+                    f"{p.stem}.backup.{datetime.now().strftime(timestamp_fmt)}{p.suffix}"
                 )
                 p.replace(backup_path)
             p.unlink(missing_ok=True)
-            ensure_dir_exists(_dstfile.parent)
+            _dstfile.parent.mkdir(parents=True, exist_ok=True)
             published.append(copy_file(src, _dstfile))
         return published
     except Exception as e:
@@ -185,5 +187,12 @@ def publish_staged_file(
             backup_dir=str(backup_dir)
         )) from e
 
-def size_of_file(path: StrPath, /) -> int:
-    return to_path(path).stat().st_size
+
+__all__ = export(
+    wait_for_file_exists, 
+    wait_for_file_unlock, 
+    make_temp_file, 
+    copy_file, 
+    stage_file, 
+    publish_staged_file
+)

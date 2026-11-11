@@ -1,29 +1,42 @@
 """
 *`@file`* `fs/_stat.py`
 """
-from pathlib import Path
-from ._file import size_of_file
 from ._path import (StrPath, to_path)
-from ._dir import (size_of_dir)
+from .types import SizeUnit
 from lute import LogMsg
-from .. import _string as String
 
 
-class SizeUnit(String.BaseEnum):
-    BYTE = "B"
-    KILOBYTE = "KB"
-    MEGABYTE = "MB"
-    GIGABYTE = "GB"
-    TERRABYTE = "TB"
 
-def _format_bytestr(num_bytes: int, /) -> str:
+def format_bytestr(num_bytes: int, /) -> str:
     units = ("B", "KB", "MB", "GB", "TB")
     size = float(num_bytes)
     for unit in SizeUnit.values():
         if size < 1024.0 or unit == units[-1]:
             return f"{size:.2f} {unit}"
         size = size / 1024.0
-    raise RuntimeError(f"{_format_bytestr.__name__} Unreachable")
+    raise RuntimeError(f"{format_bytestr.__name__} Unreachable")
+
+def size_of_file(path: StrPath, /) -> int:
+    return to_path(path).stat().st_size
+
+
+def size_of_dir(dir: StrPath, /) -> int:
+    try:
+        dir = to_path(dir)
+        if (not dir.is_dir()): 
+            raise ValueError(f"Provided path is not a directory")
+        return sum(
+            p.stat().st_size
+            for p in dir.rglob("*")
+            if p.is_file()
+        )
+    except Exception as e:
+        raise RuntimeError(LogMsg.err(
+            e,
+            f"Faild to compute size of directory content",
+            dir=str(dir)
+        )) from e
+
 
 
 def size_of(path: StrPath, /) -> int:

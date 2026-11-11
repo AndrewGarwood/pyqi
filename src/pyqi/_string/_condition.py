@@ -243,10 +243,28 @@ class StringConditionOptionsDict(TypedDict, total=False):
 @dataclass
 class StringConditionOptions(Serial[StringConditionOptionsDict]):
     condition: StringCondition
-    target: StrInput
     ignore_case: bool = True
     require_all: bool = False
+    def __init__(
+        self,
+        condition: StringCondition,
+        target: StrInput,
+        ignore_case: bool=True,
+        require_all: bool=False
+    ):
+        self.condition = condition
+        self._target = target
+        self.ignore_case = ignore_case
+        self.require_all = require_all
 
+    @property
+    def target(self):
+        return resolve_arbitrary(self._target)
+    
+    @target.setter
+    def target(self, other: StrInput, /):
+        self._target = other
+    
     @classmethod
     def from_dict(cls, data: StringConditionOptionsDict | dict[str, Any], /) -> Self:
         try:

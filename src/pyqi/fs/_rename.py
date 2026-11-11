@@ -8,7 +8,7 @@ from ._search import (get_directory_files)
 from lute import LogMsg
 from typing import (Optional, Callable, Sequence, Mapping)
 from .. import (_array as Array)
-
+from pyqi.utils.module import export
 
 
 def rename_dir_files(
@@ -130,3 +130,6 @@ def _modify_filename(
         case _: # should be unreachable
             raise ValueError(LogMsg(f"Invalid param 'how: RenameOperation'"))
     return path.with_name(new_name)
+
+
+__all__ = export(rename_dir_files, rename_files, _modify_filename)
