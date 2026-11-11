@@ -12,15 +12,17 @@ StrPath: TypeAlias = str | Path
 def read_list(
     path: StrPath, 
     /, 
-    sep: str = "\n", 
+    sep: str | None=None, 
     encoding: str = "utf-8",
     normalize: Callable[[str], T] = lambda x: x.strip(),
 ) -> list[T]:
     """
+    - *`@param`* `sep (str | None)` will default to `"\\n"`
     - *`@note`* if an `item` is empty string, it is *not* normalized/added to result list
         - where `item` is element in `f.read().strip().split(sep)`
     """
     try:
+        sep = sep or "\n"
         result: list[T] = []
         with Path(path).open('r', encoding=encoding) as f:
             data = f.read().strip()
@@ -29,8 +31,7 @@ def read_list(
                 result.append(normalize(item))
         return result
     except Exception as e:
-        raise RuntimeError(LogMsg.err(
-            e, 
+        raise RuntimeError(LogMsg.err(e, 
             f"Failed to read list from file content",
             path=str(path),
             sep_char=sep,

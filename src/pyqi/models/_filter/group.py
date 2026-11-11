@@ -82,4 +82,63 @@ class FilterGroup(Json.Serial[FilterGroupDict]):
             "filters": [(x.to_dict()) for x in self.filters],
         }
 
+    def valid_filter_items(
+        self, 
+        valid_fields: set[str], 
+        /, 
+        _raise_on_empty: bool=True
+    ):
+        """
+        instance method that calls static `FilterGroup.get_valid_filter_items()`
+        """
+        return FilterGroup.get_valid_filter_items(
+            self.filters,
+            valid_fields,
+            _raise_on_empty=_raise_on_empty
+        )
+    
+    @staticmethod
+    def get_valid_filter_items(
+        items: list[Filter | FilterGroup], 
+        valid_fields: set[str], 
+        /, 
+        _raise_on_empty: bool=True
+    ) -> list[Filter | FilterGroup]:
+        valid_filters: list[Filter | FilterGroup] = []
+        for item in items:
+            if (isinstance(item, Filter)):
+                if (item.field in valid_fields): valid_filters.append(item)
+                continue
+            _filters = FilterGroup.get_valid_filter_items(item.filters, valid_fields)
+            if (_filters):
+                valid_filters.append(item.with_filters(_filters))
+        if (not valid_filters and _raise_on_empty):
+            raise ValueError(LogMsg(
+                f"self.filters did not contain any elements with valid fields",
+                valid_fields=list(valid_fields)
+            ))
+        return valid_filters
+
+    def with_filters(
+        self, 
+        filters: list[Filter | FilterGroup], 
+        /,
+        operator: LogicalOperator | None = None
+    ) -> FilterGroup:
+        """
+        *`@returns`*
+        ```
+        replace(
+            self, 
+            operator=operator or self.operator,
+            filters=filters,
+        )
+        ```
+        """
+        return replace(
+            self, 
+            operator=operator or self.operator,
+            filters=filters,
+        )
+    
 __all__ = export(LogicalOperator, FilterGroupDict, FilterGroup)

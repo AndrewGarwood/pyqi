@@ -2,7 +2,7 @@
 *`@file`* `models/_enum`
 """
 from __future__ import annotations
-from functools import cached_property, cache
+from functools import cache
 from enum import (Enum, StrEnum, IntEnum)
 from typing import (Any, Generic, TypeVar, Self, TypeGuard)
 from lute import LogMsg, annotate
@@ -20,6 +20,8 @@ MetaT = TypeVar("MetaT") # , bound=object
 
 class MetaEnum(Generic[ValueT, MetaT], Enum):
     """
+    *`@extends`* `Generic[ValueT, MetaT], Enum`
+
     Base class for enums declared as:
     ```
     MEMBER = (value, metadata)
@@ -38,6 +40,10 @@ class MetaEnum(Generic[ValueT, MetaT], Enum):
         member._value_ = value
         member.meta = meta
         return member
+    
+    # @classmethod
+    # def __getitem__(cls, name: str | tuple[ValueT, MetaT]) -> Self:
+    #     return cls[name] if isinstance(name, str) else cls.from_value(name[0])
 
     @classmethod
     def from_value(cls, value: ValueT, /,) -> Self:
@@ -77,23 +83,23 @@ class MetaEnum(Generic[ValueT, MetaT], Enum):
         return key in cls.__members__
 
     @classmethod
-    def values(cls):
+    def values(cls) -> tuple[ValueT, ...]:
         """ 
         *`@returns`* `tuple[ValueT, ...] = tuple(m.value for m in cls)` 
         """
         return tuple(m.value for m in cls)
 
     @classmethod
-    def meta_values(cls):
+    def meta_values(cls) -> tuple[MetaT, ...]:
         """ 
         *`@returns`* `tuple(m.meta for m in cls)` 
         """
         return tuple(m.meta for m in cls)
 
     @classmethod
-    def items(cls):
+    def items(cls) -> tuple[tuple[str, Self], ...]:
         """ 
-        *`@returns`* `tuple((m.name, m) for m in cls)` 
+        *`@returns`* `tuple[tuple[str, Self], ...] = tuple((m.name, m) for m in cls)` 
         - `len(cls.items()[i]) == 2`
         - `cls.items()[i][0] (str)` key/name
         - `cls.items()[i][1] (MetaEnum[ValueT, MetaT]) { value: ValueT; meta: MetaT }`

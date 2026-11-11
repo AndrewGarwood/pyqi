@@ -67,11 +67,12 @@ class Serial(ABC, Generic[T]):
     - def items(self) -> tuple[tuple[str, Any | None], ...]: ...
     ```
     """
-    def keys(self):
+    @classmethod
+    def keys(cls):
         """ 
         *`@returns`* `Array.filter(dir(self), lambda k: not _is_builtin_prop(k))`
         """
-        return tuple(Array.filter(dir(self), lambda k: not _is_builtin_prop(k)))
+        return tuple(Array.filter(dir(cls), lambda k: not _is_builtin_prop(k)))
 
     def items(self) -> tuple[tuple[str, Any | None], ...]:
         """ 
@@ -127,11 +128,29 @@ class Serial(ABC, Generic[T]):
         return cls.from_dict(data)
 
     @classmethod
+    def from_config(
+        cls, 
+        src: JsonDict[T] | str | bytes | Path,
+        /,
+    ) -> Self:
+        """
+        load instance from `json object` or `json file`
+        """
+        return (
+            cls.from_dict(src) if isinstance(src, (dict, Mapping)) 
+            else cls.from_json(src)
+        )
+
+
+    @classmethod
     def from_json_file(
         cls,
         path: str | Path,
         /,
     ) -> Self:
+        """
+        *`@returns`* `cls.from_json(Path(path))`
+        """
         return cls.from_json(Path(path))
 
     def to_json_string(
