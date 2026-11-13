@@ -3,30 +3,30 @@
 """
 from __future__ import annotations
 import datetime as dt
-from typing import (Literal,  Optional, overload)
+from typing import (Literal, overload)
 from zoneinfo import ZoneInfo
 import dateutil
 from lute import LogMsg
 from .types import (DateValue)
-from .constants import (EXCEL_EPOCH)
+from .constants import (EXCEL_EPOCH, EXCEL_1904_EPOCH)
 from pyqi.utils.module import export
 
 
-def now(tz: Optional[ZoneInfo]=None,/):
+def now(tz: ZoneInfo | None=None,/):
     return dt.datetime.now(tz)
 
 def strftime(d: dt.datetime, fmt: str, /) -> str: # redundant, but mb useful when import module...
     return d.strftime(fmt)
 
 
-def strptime(s: str, fmt: Optional[str]=None, /) -> dt.datetime:
+def strptime(s: str, fmt: str | None=None, /) -> dt.datetime:
     return dt.datetime.strptime(s, fmt) if fmt else parse(s)
 
 
 def parse(
     dt_str: str, 
     /, 
-    parserinfo: Optional[dateutil.parser.parserinfo]=None, 
+    parserinfo: dateutil.parser.parserinfo | None=None, 
     **kwargs
 ) -> dt.datetime:
     return dateutil.parser.parse(
@@ -36,7 +36,7 @@ def parse(
     )
 
 @overload
-def resolve(d: DateValue, /)  -> Optional[dt.datetime]: ...
+def resolve(d: DateValue, /)  -> dt.datetime | None: ...
 
 @overload
 def resolve(d: DateValue, /, strict: Literal[True]) -> dt.datetime: ...
@@ -62,7 +62,11 @@ def resolve(d: DateValue, /, strict: bool=False):
         return result
     except Exception as e:
         if (strict): 
-            raise RuntimeError(LogMsg.err(e, d=str(d), strict=strict))
+            raise RuntimeError(LogMsg.err(
+                e, 
+                d=str(d), 
+                strict=strict
+            )) from e
         return None
     
 class From():
@@ -81,9 +85,9 @@ class From():
         v: str, 
         /, 
         fmt: str | None=None, 
-        year: Optional[int]=None, 
-        month: Optional[int]=None, 
-        day: Optional[int]=None
+        year: int | None=None, 
+        month: int | None=None, 
+        day: int | None=None
     ):
         _dt = strptime(v, fmt)
         return (
@@ -101,8 +105,21 @@ class From():
 
 
     @staticmethod
-    def days_since_xl_epoch(v: int | float, /):
-        return EXCEL_EPOCH + dt.timedelta(days=float(v))
+    def days_since_xl_epoch(v: int | float, /, *, use_1904_epoch: bool=False):
+        """
+        *`@returns`* 
+        `epoch_datetime + dt.timedelta(days=float(serial))`
+        - where `serial` = `v + 1` if `(not use_1904_epoch and v < 60)` else `v`
+        ```
+        EXCEL_EPOCH: datetime = datetime(1899, 12, 30)
+        EXCEL_1904_EPOCH: datetime = dt.datetime(1904, 1, 1)
+        ```
+        """
+        if (not use_1904_epoch):
+            serial = (v + 1 if v < 60 else v)
+            return EXCEL_EPOCH + dt.timedelta(days=float(serial))
+        else:
+            return EXCEL_1904_EPOCH + dt.timedelta(days=float(v))
 
 class To():
     @staticmethod
@@ -112,7 +129,7 @@ class To():
     @staticmethod
     def string(
         _dt: dt.datetime, 
-        fmt: Optional[str]=None, 
+        fmt: str | None=None, 
         /, 
     ):
         return (

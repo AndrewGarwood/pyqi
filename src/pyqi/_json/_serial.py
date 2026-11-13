@@ -9,7 +9,7 @@ from functools import cached_property
 from pathlib import Path
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import (Any, TypeVar, Self, Generic, TypeGuard, Iterable)
+from typing import (Any, TypeVar, Self, Generic, TypeGuard)
 # from pydantic import BaseModel
 from lute import LogMsg
 from .types import (JsonDict, JsonValue, is_json_value)
@@ -52,7 +52,6 @@ class Serial(ABC, Generic[T]):
     """
     `ABC, Generic[T],` 
     - where `T = TypeVar("T", bound=(Mapping))`
-    - TODO: just use pydantic BaseModel ?
     ```
     - @abstractmethod def from_dict(cls, data: JsonDict[T],/)
     - def to_dict(self) -> JsonDict[T] # should overwrite
@@ -67,10 +66,15 @@ class Serial(ABC, Generic[T]):
     - def items(self) -> tuple[tuple[str, Any | None], ...]: ...
     ```
     """
+
+    # consideration: add param ( _dict_cls: Type[T] | None=None, /) or use cls.__annotations__ 
+    # to get list of attrs. but cls.__annotations__ only includes props declared in class scope
+    # so wouldn't handle a prop defined in __init__... maybe need a keys(self) and cls_keys(cls) ...
     @classmethod
-    def keys(cls):
+    def keys(cls) -> tuple[str, ...]:
         """ 
-        *`@returns`* `Array.filter(dir(self), lambda k: not _is_builtin_prop(k))`
+        *`@returns`* 
+        - `Array.filter(dir(cls), lambda k: not _is_builtin_prop(k))`
         """
         return tuple(Array.filter(dir(cls), lambda k: not _is_builtin_prop(k)))
 
@@ -78,7 +82,10 @@ class Serial(ABC, Generic[T]):
         """ 
         *`@returns`* `Array.map(self.keys(), lambda k: (k, getattr(self, k, None)))`
         """
-        return tuple(Array.map(self.keys(), lambda k: (k, safe.readattr(self, k))))
+        return tuple(Array.map(
+            self.keys(), 
+            lambda k: (k, safe.readattr(self, k))
+        ))
 
     @classmethod
     @abstractmethod
@@ -221,12 +228,41 @@ class Serial(ABC, Generic[T]):
 
 def _is_builtin_prop(value: str, /) -> bool:
     """
-    *`@returns`* `(is_dunder_prop(value) or value in _PROPS_TO_IGNORE)`
+    *`@returns`* `(value in _PROPS_TO_IGNORE or is_dunder_prop(value))`
+    - `_PROPS_TO_IGNORE set<str>(29)`
     """
-    return (is_dunder_prop(value) or value in _PROPS_TO_IGNORE)
+    return (value in _PROPS_TO_IGNORE or is_dunder_prop(value))
 
 _PROPS_TO_IGNORE: set[str] = set([
     '_is_protocol',
+    '__annotations__', 
+    '__class__', 
+    '__delattr__', 
+    '__dict__', 
+    '__dir__', 
+    '__doc__', 
+    '__eq__', 
+    '__format__', 
+    '__ge__', 
+    '__getattribute__', 
+    '__getstate__', 
+    '__gt__', 
+    '__hash__', 
+    '__init__', 
+    '__init_subclass__',
+    '__le__',
+    '__lt__', 
+    '__module__', 
+    '__ne__', 
+    '__new__', 
+    '__reduce__', 
+    '__reduce_ex__', 
+    '__repr__', 
+    '__setattr__', 
+    '__sizeof__', 
+    '__str__', 
+    '__subclasshook__', 
+    '__weakref__', 
 ])
 
 def is_dunder_prop(value: str, /) -> bool:

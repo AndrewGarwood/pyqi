@@ -1,10 +1,9 @@
 """
 *`@file`* `utils/safe`
 """
-from typing import (Any, Literal)
-
+from typing import (Any, Literal, Callable)
+from inspect import getfullargspec
 # thought I might have need for this during debugging, but mb unnecessary
-
 
 def readattr(obj: Any, attr: str, /, use_repr: bool=False) -> Any | Literal["<unavailable>"] | str:
     try:
@@ -18,16 +17,44 @@ def readattr(obj: Any, attr: str, /, use_repr: bool=False) -> Any | Literal["<un
     except Exception as e:
         return f"<unavailable> ({type(e).__name__}) {str(e)}"
 
-def invoke_method(obj: Any, method: str, *args, **kwargs) -> Any | Literal["<unavailable>", "<not_callable>", "<method_failed>"] | str:
-    value = readattr(obj, method)
-    if (isinstance(value, str)) and value == "<unavailable>":
+def invoke_method(
+    obj: Any, 
+    method: str, 
+    *args, 
+    **kwargs
+) -> (Any 
+    | Literal["<unavailable>", "<not_callable>", "<method_failed>"] 
+    | str
+):
+    """
+    `getattr(obj, method)(*args, **kwargs)`
+    """
+    method_value = readattr(obj, method)
+    if (isinstance(method_value, str)) and method_value == "<unavailable>":
         return "<unavailable>"
-    if (not callable(value)):
+    if (not callable(method_value)):
         return "<not_callable>"
     try:
-        return value(*args, **kwargs)
+        return method_value(*args, **kwargs)
     except Exception as e:
-        return f"<method_failed> ({type(e).__name__}) {str(e)}"
+        return f"<method_failed> method={getfullargspec(method_value)} ({type(e).__name__}) {str(e)}"
+
+def execute_deferred(
+    fn: Callable[[], Any],
+    /,
+) -> (Any 
+    | Literal['<execution_failed>'] 
+    | str
+):
+    try: 
+        return fn()
+    except Exception as e:
+        return " ".join([
+            "<execution_failed>",
+            f"function={getfullargspec(fn) if callable(fn) else '<fn not_callable>'}",
+            f"({type(e).__name__}) {str(e)}"
+        ])
+
 
 def to_str(value: Any, /, use_repr: bool=False) -> str | Literal["<unprintable>"]:
     try: 
