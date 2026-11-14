@@ -3,11 +3,16 @@
 """
 from __future__ import annotations
 from collections.abc import (Mapping)
-from typing import (Any, TypeAlias, TypeVar, TypeGuard)
+from typing import (Any, TypeAlias, TypeVar, TypeGuard, Protocol)
 from ..types import Primitive, is_primitive
 from .. import _array as Array
 
-T = TypeVar("T", bound=(Mapping)) # cannot use TypedDict here
+T = TypeVar("T", bound=(Mapping))
+T_co = TypeVar("T_co", bound=(Mapping), covariant=True)
+
+class SupportsToDict(Protocol[T_co]):
+    def to_dict(self) -> T_co: 
+        ...
 
 JsonRawSequence: TypeAlias = str | bytes | bytearray
 JsonScalar: TypeAlias = Primitive

@@ -19,4 +19,5 @@ from .load import (
 from .write import (
     file as write_file,
     dumpstr as to_str,
+    dumpstr as stringify,
 )

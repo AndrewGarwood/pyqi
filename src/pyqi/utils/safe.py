@@ -1,16 +1,46 @@
 """
 *`@file`* `utils/safe`
 """
-from typing import (Any, Literal, Callable)
+from typing import (Any, Literal, Callable, TypeVar, overload)
 from inspect import getfullargspec
 # thought I might have need for this during debugging, but mb unnecessary
 
-def readattr(obj: Any, attr: str, /, use_repr: bool=False) -> Any | Literal["<unavailable>"] | str:
+VT = TypeVar('VT')
+
+
+@overload
+def readattr(
+    obj: Any, 
+    attr: str, 
+    /, 
+    use_repr: Literal[False]=False, 
+    *, 
+    missing_val: VT,
+) -> VT: ...
+
+@overload
+def readattr(
+    obj: Any, 
+    attr: str, 
+    /, 
+    use_repr: bool=False, 
+    *, 
+    missing_val: Literal['<unavailable>'] | None='<unavailable>',
+) -> Literal['<unavailable>'] | None: ...
+
+def readattr(
+    obj: Any, 
+    attr: str, 
+    /, 
+    use_repr: bool=False, 
+    *, 
+    missing_val: Any | None=None
+):
     try:
         _MISSING = object()
         value = getattr(obj, attr, _MISSING)
         return (
-            "<unavailable>" if value is _MISSING 
+            missing_val if value is _MISSING 
             else value if (not use_repr) 
             else repr(value)
         )

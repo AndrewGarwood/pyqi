@@ -4,15 +4,16 @@
 """
 from __future__ import annotations
 import json
+from os import PathLike
 from datetime import date, datetime, time
 from functools import cached_property
 from pathlib import Path
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import (Any, TypeVar, Self, Generic, TypeGuard)
+from typing import (Any, TypeVar, Self, Generic, TypeGuard, TypeAlias, cast)
 # from pydantic import BaseModel
 from lute import LogMsg
-from .types import (JsonDict, JsonValue, is_json_value)
+from .types import (JsonDict, JsonValue, is_json_value, SupportsToDict)
 from ..types import is_primitive
 from .. import _array as Array
 from ..utils import safe
@@ -33,7 +34,7 @@ def serialize(value: Any, /) -> JsonValue:
         return value.isoformat()
     if (Array.isArray(value)):
         return Array.map(value, serialize)
-    if (isinstance(value, Mapping)):
+    if (isinstance(value, (Mapping))): # , Serial
         return {
             k: serialize(v) 
             for k, v in value.items()
@@ -53,17 +54,10 @@ class Serial(ABC, Generic[T]):
     `ABC, Generic[T],` 
     - where `T = TypeVar("T", bound=(Mapping))`
     ```
-    - @abstractmethod def from_dict(cls, data: JsonDict[T],/)
-    - def to_dict(self) -> JsonDict[T] # should overwrite
-
-    - @classmethod def from_json(cls, ...)
-    - @classmethod def from_json_file(cls, ...)
+    @abstractmethod 
+    def from_dict(cls, data: JsonDict[T],/) # must overwrite
     
-    - def to_json_string(self, ...)
-    - def to_json_file(self, ...)
-    
-    - def keys(self) -> tuple[str,...]: ...
-    - def items(self) -> tuple[tuple[str, Any | None], ...]: ...
+    def to_dict(self) -> JsonDict[T] # recommended overwrite
     ```
     """
 
@@ -78,14 +72,33 @@ class Serial(ABC, Generic[T]):
         """
         return tuple(Array.filter(dir(cls), lambda k: not _is_builtin_prop(k)))
 
+    @cached_property
+    def cached_keys(self):
+        """ 
+        *`@returns`* `self.keys()` 
+        - `functools.cached_property`
+        """
+        return self.keys()
+    
+    def _clear_cached_keys(self):
+        if "cached_keys" in self.__dict__:
+            del self.cached_keys
+    
+    def reload_cached_keys(self):
+        self._clear_cached_keys()
+        self.cached_keys
+
+
     def items(self) -> tuple[tuple[str, Any | None], ...]:
         """ 
         *`@returns`* `Array.map(self.keys(), lambda k: (k, getattr(self, k, None)))`
         """
-        return tuple(Array.map(
-            self.keys(), 
-            lambda k: (k, safe.readattr(self, k))
-        ))
+        r: list[tuple[str, Any | None]] = []
+        for k in self.keys():
+            v = safe.readattr(self, k)
+            if (callable(v)): continue
+            r.append((k, v))
+        return tuple(r)
 
     @classmethod
     @abstractmethod
@@ -112,19 +125,17 @@ class Serial(ABC, Generic[T]):
         Construct an instance from a JSON string, bytes, or file path.
 
         - `Path` objects are interpreted as files. 
-        - `Strings` are interpreted as JSON text
+        - `Strings` are interpreted as JSON text (i.e. stringified json)
         """
         try:
-            if isinstance(src, Path):
-                with src.open(
-                    mode="r",
-                    encoding="utf-8",
-                ) as file:
+            if isinstance(src, PathLike):
+                with src.open(mode="r", encoding="utf-8") as file:
                     data = json.load(file)
             else:
                 data = json.loads(src)
         except (OSError, UnicodeError, json.JSONDecodeError) as e:
-            raise DataModelError(LogMsg.err(e,
+            raise DataModelError(LogMsg.err(
+                e,
                 f"Could not load {cls.__name__} JSON from {type(src)=}"
             )) from e
         if not isinstance(data, dict):
@@ -132,7 +143,7 @@ class Serial(ABC, Generic[T]):
                 f"{cls.__name__} requires a JSON object; "
                 f"received {type(data).__name__}"
             ))
-        return cls.from_dict(data)
+        return cls.from_dict(cast(T, data))
 
     @classmethod
     def from_config(
@@ -144,10 +155,30 @@ class Serial(ABC, Generic[T]):
         load instance from `json object` or `json file`
         """
         return (
-            cls.from_dict(src) if isinstance(src, (dict, Mapping)) 
+            cls.from_dict(cast(T, src)) if isinstance(src, (Mapping)) 
             else cls.from_json(src)
         )
 
+    @classmethod
+    def from_any(cls, src: Self | ObjectSource[T],/) -> Self:
+        """ 
+        - *`@param`* 
+        `src (Self | ObjectSource[T] = Self | SupportsToDict[T@ObjectSource] | T@ObjectSource 
+        | dict[str, Any] | str | Path | bytes`
+        """
+        if isinstance(src, (cls)):
+            return src
+        if isinstance(src, Mapping):
+            return cls.from_dict(cast(T, src))
+        if isinstance(src, (str, Path, bytes)):
+            return cls.from_json(src)
+        
+        raise TypeError(LogMsg.bad_arg(
+            src, 
+            "Serial.from_any(..., <src: ObjectSource[T]>)",
+            f"Unable to construct Serial class from source value",
+            str, Path, Serial, dict, Mapping, cls
+        ))
 
     @classmethod
     def from_json_file(
@@ -272,4 +303,19 @@ def is_dunder_prop(value: str, /) -> bool:
         and value.endswith("__")
     )
 
-__all__ = export(Serial, serialize, is_serializeable, DataModelError)
+
+ObjectSource: TypeAlias = (
+    SupportsToDict[T] 
+    | JsonDict[T] 
+    | str 
+    | Path
+    | bytes 
+)
+
+__all__ = export(
+    Serial, 
+    serialize, 
+    is_serializeable, 
+    DataModelError, 
+    "ObjectSource"
+)
