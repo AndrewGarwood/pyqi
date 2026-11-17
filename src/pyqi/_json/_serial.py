@@ -294,6 +294,8 @@ _PROPS_TO_IGNORE: set[str] = set([
     '__str__', 
     '__subclasshook__', 
     '__weakref__', 
+    '_abc_impl',
+    'cached_keys'
 ])
 
 def is_dunder_prop(value: str, /) -> bool:

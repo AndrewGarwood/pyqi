@@ -25,8 +25,18 @@ def readattr(
     /, 
     use_repr: bool=False, 
     *, 
-    missing_val: Literal['<unavailable>'] | None='<unavailable>',
-) -> Literal['<unavailable>'] | None: ...
+    missing_val: None,
+) -> Any | None: ...
+
+@overload
+def readattr(
+    obj: Any, 
+    attr: str, 
+    /, 
+    use_repr: bool=False, 
+    *, 
+    missing_val: Literal['<unavailable>']='<unavailable>',
+) -> Any | Literal['<unavailable>']: ...
 
 def readattr(
     obj: Any, 
@@ -34,7 +44,7 @@ def readattr(
     /, 
     use_repr: bool=False, 
     *, 
-    missing_val: Any | None=None
+    missing_val: Any | Literal['<unavailable>'] | None='<unavailable>'
 ):
     try:
         _MISSING = object()

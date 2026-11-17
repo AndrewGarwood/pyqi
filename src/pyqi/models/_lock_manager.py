@@ -38,25 +38,33 @@ class LockManager:
             self._claimed.discard(handle)
 
     @contextmanager
-    def engage_lock(self, sleep: float=0.25):
-        thread = f"{threading.current_thread().name}"
+    def engage_lock(
+        self, 
+        *, 
+        blocking: bool=True, 
+        sleep: float=0, 
+        verbose: bool=False
+    ):
+        thread = threading.current_thread().name
         start = time.monotonic()
-        self.acquire(blocking=True)
+        self.acquire(blocking=blocking)
         acquired = time.monotonic()
-        self.log.debug(LogMsg(
-            f"{self.name} acquired lock",
-            thread=thread,
-            wait_time=f"{acquired - start:.2f}s"
-        ))
+        if (verbose): 
+            self.log.debug(LogMsg(
+                f"{self.name} acquired lock",
+                thread=thread,
+                wait_time=f"{acquired - start:.2f}s"
+            ))
         try:
             time.sleep(sleep)
             yield
         finally:
-            self.log.debug(LogMsg(
-                f"{self.name} releasing lock",
-                thread=thread,
-                held_time=f"{time.monotonic() - acquired:.2f}s"
-            ))
+            if (verbose):
+                self.log.debug(LogMsg(
+                    f"{self.name} releasing lock",
+                    thread=thread,
+                    held_time=f"{time.monotonic() - acquired:.2f}s"
+                ))
             self.release()
 
 

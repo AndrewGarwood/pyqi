@@ -131,8 +131,8 @@ def find_process_by_open_file(
 
 def find_process_by_open_file(
     path: StrPath, 
-    exepath: StrPath | None = None, 
     /,
+    exepath: StrPath | None = None, 
     *,
     strict: bool=False,
     by_filename: bool=False
@@ -180,9 +180,44 @@ def find_process_by_open_file(
     return holder
 
 
+def kill_process_by_open_file(
+    path: StrPath, 
+    /,
+    exepath: StrPath | None = None, 
+    *,
+    by_filename: bool=False,
+    timeout: float=5.0,
+    verbose: bool = True
+) -> bool:
+    proc = find_process_by_open_file(
+        path, 
+        exepath, 
+        by_filename=by_filename
+    )
+    if (proc is None):
+        if (verbose): 
+            mlog.debug(LogMsg(
+                f"Did not find process holding target file",
+                path=str(path),
+                exepath=str(exepath),
+                by_filename=by_filename
+            ))
+        return False
+    _killed = kill_procs([proc], timeout=timeout)
+    if (verbose):
+        mlog.debug(LogMsg(
+            f"Length of processes killed = {len(_killed)}",
+                path=str(path),
+                exepath=str(exepath),
+                by_filename=by_filename
+        ))
+    return bool(len(_killed))
+
+
 __all__ = export(
     find_process_by_open_file, 
     kill_procs, 
     terminate_process_instances, 
-    launch_executable
+    launch_executable,
+    kill_process_by_open_file
 )

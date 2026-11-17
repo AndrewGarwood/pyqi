@@ -97,8 +97,8 @@ def copy_file(
     overwrite: bool=False
 ) -> Path:
     """
+    wrapper for `shutil.copy2()`
     - *`@param`* `dst` can be filepath or dirpath, resolves to filepath
-    - wrapper for `shutil.copy2()`
     - *`@returns`* `dst (Path)` resolved dst filepath
     """
     try:
