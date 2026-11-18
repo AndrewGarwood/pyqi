@@ -26,3 +26,12 @@ from ._datetime import (
     From as datetime_from,
     To as datetime_to
 )
+from ._seconds import (
+    From as seconds_from,
+    To as seconds_to
+)
+
+from ._minutes import (
+    From as minutes_from,
+    To as minutes_to
+)

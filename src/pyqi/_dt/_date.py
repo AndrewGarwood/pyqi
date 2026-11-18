@@ -17,7 +17,6 @@ from lute import LogMsg
 from .. import _array as Array
 
 
-
 def _default_get_date_str(s: str, /) -> str: return s[:10]
 
 def strftime(d: dt.date, fmt: str, /) -> str: return d.strftime(fmt)
@@ -54,24 +53,6 @@ def resolve(d: DateValue, /, strict: bool=False): # , default: dt.date | None=No
             ))
     return result
 
-# def strict_resolve_date(d: DateValue, /) -> dt.date:
-#     """
-#     *`@returns`*
-#     - `parse(d) if isinstance(d, str)`
-#     - `d.date() if isinstance(d, dt.datetime)`
-#     - `d if isinstance(d, dt.date)`
-#     - `else raise ValueError`
-#     """
-#     result = (
-#         parse(d) if isinstance(d, str)
-#         else d.date() if isinstance(d, dt.datetime)
-#         else d if isinstance(d, dt.date)
-#         else None
-#     )
-#     if result is None:
-#         raise ValueError(LogMsg(f"Unable to resolve value '{d}' to date object"))
-#     return result
-
 def parse(date_str: str, /, parserinfo: parser.parserinfo | None=None, **kwargs) -> dt.date:
     try:
         return parser.parse(date_str, parserinfo=parserinfo, **kwargs)
@@ -82,7 +63,6 @@ def parse(date_str: str, /, parserinfo: parser.parserinfo | None=None, **kwargs)
             parserinfo=str(parserinfo),
             kwargs=str(kwargs)
         )) from e
-        
         
 class From():
     @staticmethod
@@ -405,24 +385,19 @@ def next_weekday(
 
     Parameters
     ----------
-    dt:
+    ref:
         Input datetime (naive or timezone-aware). tzinfo is preserved.
     weekday:
-        Desired weekday as an int where Monday=0 ... Sunday=6 (dt.weekday()).
+        Desired weekday as an int where Monday=0 ... Sunday=6 (ref.weekday()).
     allow_same_day:
-        If True and dt falls on `weekday`, return that same date at 00:00.
-        If False, then if dt is on `weekday` but after 00:00, roll forward
+        If `True` and `ref` falls on `weekday`, return that same date at 00:00.
+        If `False`, then if `ref` is on `weekday` but after 00:00, roll forward
         to the following week's `weekday` at 00:00.
 
     Returns
     -------
-    datetime
-        A datetime representing the next soonest `weekday` at midnight.
-
-    Notes
-    -----
-    - If dt is exactly at midnight of the target weekday, the function returns
-    dt itself (regardless of allow_same_day).
+    date
+        A date representing the next soonest `weekday` ~~at midnight~~.
     """
     if not (Weekday.MONDAY <= weekday <= Weekday.SUNDAY):
         raise ValueError(f"weekday must be in range 0..6 (Mon=0..Sun=6); got {weekday}")
