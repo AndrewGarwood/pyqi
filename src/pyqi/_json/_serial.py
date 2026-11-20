@@ -26,8 +26,8 @@ def is_serializeable(value: Any, /) -> TypeGuard[JsonValue | Serial]:
     return (isinstance(value, Serial) or is_json_value(value))
 
 def serialize(value: Any, /) -> JsonValue:
-    # if (isinstance(value, Serial)): 
-    #     return value.to_dict()
+    if (isinstance(value, Serial)): 
+        return value.to_dict()
     if (is_primitive(value)):
         return value
     if isinstance(value, (date, datetime, time)):
@@ -68,9 +68,18 @@ class Serial(ABC, Generic[T]):
     def keys(cls) -> tuple[str, ...]:
         """ 
         *`@returns`* 
-        - `Array.filter(dir(cls), lambda k: not _is_builtin_prop(k))`
+        - `tuple(Array.filter(
+            dir(cls), 
+            lambda k: not _is_builtin_prop(k) and not callable(safe.readattr(cls, k))
+        ))`
         """
-        return tuple(Array.filter(dir(cls), lambda k: not _is_builtin_prop(k)))
+        return tuple(Array.filter(
+            dir(cls), 
+            lambda k: (
+                not _is_builtin_prop(k) 
+                and not callable(safe.readattr(cls, k))
+            )
+        ))
 
     @cached_property
     def cached_keys(self):
@@ -117,6 +126,9 @@ class Serial(ABC, Generic[T]):
         for k, v in self.items():
             try: result[k] = serialize(v)
             except Exception: pass
+            # except Exception as e:
+            #     print(LogMsg.err(e, key=k, value=safe.to_str(v))) 
+            #     pass
         return result
 
     @classmethod
@@ -144,20 +156,6 @@ class Serial(ABC, Generic[T]):
                 f"received {type(data).__name__}"
             ))
         return cls.from_dict(cast(T, data))
-
-    @classmethod
-    def from_config(
-        cls, 
-        src: JsonDict[T] | str | bytes | Path,
-        /,
-    ) -> Self:
-        """
-        load instance from `json object` or `json file`
-        """
-        return (
-            cls.from_dict(cast(T, src)) if isinstance(src, (Mapping)) 
-            else cls.from_json(src)
-        )
 
     @classmethod
     def from_any(cls, src: Self | ObjectSource[T],/) -> Self:
@@ -245,7 +243,8 @@ class Serial(ABC, Generic[T]):
             + json.dumps(self.to_dict(), indent=4)
         )
 
-    def __repr__(self) -> str: return self.__str__()
+    def __repr__(self) -> str: 
+        return self.__str__()
 
     def __attr_label__(self, attr: str, /) -> str:
         """ 
@@ -260,7 +259,7 @@ class Serial(ABC, Generic[T]):
 def _is_builtin_prop(value: str, /) -> bool:
     """
     *`@returns`* `(value in _PROPS_TO_IGNORE or is_dunder_prop(value))`
-    - `_PROPS_TO_IGNORE set<str>(29)`
+    - `_PROPS_TO_IGNORE set<str>`
     """
     return (value in _PROPS_TO_IGNORE or is_dunder_prop(value))
 
@@ -295,7 +294,7 @@ _PROPS_TO_IGNORE: set[str] = set([
     '__subclasshook__', 
     '__weakref__', 
     '_abc_impl',
-    'cached_keys'
+    'cached_keys',
 ])
 
 def is_dunder_prop(value: str, /) -> bool:

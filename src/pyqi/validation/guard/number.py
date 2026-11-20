@@ -24,7 +24,10 @@ def is_positive_number(value: Any, /) -> TypeGuard[int | float]:
     return is_number(value) and value > 0
 
 def is_positive_integer(value: Any, /) -> TypeGuard[int]:
-    return isinstance(value, int) and value > 0
+    return is_integer(value) and value > 0
+
+def is_non_negative_integer(value: Any, /) -> TypeGuard[int]:
+    return is_integer(value) and value >= 0
 
 def is_non_negative_number(value: Any, /) -> TypeGuard[int | float]:
     return is_number(value) and value >=0
@@ -39,4 +42,5 @@ __all__ = export(
     is_positive_integer, 
     is_positive_integer, 
     is_non_negative_number,
+    is_non_negative_integer
 )

@@ -5,24 +5,23 @@
 from typing import (Any, TypeVar)
 from enum import StrEnum
 from lute import LogMsg
-from pyqi.utils import export_symbols
+from pyqi.utils.module import export
 from .. import guard
 
-StringT = TypeVar('StringT', bound=str | StrEnum)
+# StringT = TypeVar('StringT', bound=str | StrEnum)
 
 
 def non_empty_string(
-    value: StringT | Any, 
+    value: Any, 
     /,
     name: str='arg',
-) -> StringT:
+) -> str:
     if (not guard.is_non_empty_string(value)):
         raise ValueError(LogMsg.bad_arg(
             value, name, "Non-empty string is required", str
         ))
     return value
         
-
-__all__ = [ 
-    *export_symbols(non_empty_string)
-]  # type: ignore
+__all__ = export(
+    non_empty_string
+)
