@@ -3,14 +3,19 @@
 """
 from __future__ import annotations
 from collections.abc import (Mapping)
-from typing import (Any, TypeAlias, TypeVar, TypeGuard, Protocol)
+from typing import (Any, TypeAlias, TypeVar, TypeGuard, Protocol, runtime_checkable)
 from ..types import Primitive, is_primitive
 from .. import _array as Array
 
 T = TypeVar("T", bound=(Mapping))
 T_co = TypeVar("T_co", bound=(Mapping), covariant=True)
 
+@runtime_checkable
 class SupportsToDict(Protocol[T_co]):
+    """ 
+    `@runtime_checkable`
+    - obj has `def to_dict(self) -> Mapping`
+    """
     def to_dict(self) -> T_co: 
         ...
 
