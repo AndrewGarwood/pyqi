@@ -158,7 +158,7 @@ class Serial(ABC, Generic[T]):
         return cls.from_dict(cast(T, data))
 
     @classmethod
-    def from_any(cls, src: Self | ObjectSource[T],/) -> Self:
+    def from_object_source(cls, src: Self | ObjectSource[T],/) -> Self:
         """ 
         - *`@param`* 
         `src (Self | ObjectSource[T] = Self | SupportsToDict[T@ObjectSource] | T@ObjectSource 
